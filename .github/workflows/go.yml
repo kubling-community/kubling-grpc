@@ -30,10 +30,10 @@ jobs:
           cache-dependency-path: sdk-go/go.sum
 
       - name: Install generation tools
-        run: bash scripts/bootstrap.sh
+        run: bash tools/bootstrap.sh
 
       - name: Generate Go SDK
-        run: bash scripts/generate.sh
+        run: bash generate.sh
 
       - name: Tidy Go module
         working-directory: sdk-go
@@ -43,7 +43,7 @@ jobs:
         run: |
           if ! git diff --exit-code; then
             echo "::error::Generated Go sources or module files are not up to date."
-            echo "::error::Run scripts/generate.sh and 'go mod tidy' locally, then commit the changes."
+            echo "::error::Run generate.sh and 'go mod tidy' locally, then commit the changes."
             exit 1
           fi
 
