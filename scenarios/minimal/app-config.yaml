@@ -1,0 +1,23 @@
+transports:
+  grpc:
+    bindAddress: "0.0.0.0"
+    portNumber: 50051
+    secure: true
+    sslConfig:
+       storeFilePath: "{{ GRPC_SSL_CERT }}"
+       storePassword: "{{ GRPC_SSL_PASS }}"
+  nativeProtocol:
+    enable: true
+  pgProtocol:
+    enable: false
+
+vdb:
+  descriptorBundle: {{ DESCRIPTOR_BUNDLE }}
+
+buffer:
+  useDisk: false
+
+softTransactions:
+  enabled: true
+  crashCompensationEnabled: false
+  transactionsDBPath: "{{ templateDirPath() }}/db/tx.db"

@@ -1,0 +1,32 @@
+---
+name: "TestVDB"
+version: "1"
+
+dataSources:
+  - name: "inmem_1"
+    dataSourceType: "EMBEDDED_INMEM"
+    configObject:
+      dataSourceName: "inmem-1"
+      databaseName: "inmem-1"
+      userName: "sa"
+      token: "sa"
+      maxConnectionPoolSize: 5
+      minConnectionPoolSize: 1
+      maxConnectionIdleMilliseconds: 7200000
+      maxConnectionLifeTimeMilliseconds: 14400000
+      cache:
+        enabled: false
+        ttlSeconds: 43200
+      allowBruteForceOperations: false
+      useKublingDDL: true
+      ddlFilePaths:
+        - "bundle:sample.sql"
+      softTransactions:
+        enabled: false
+    schema:
+      type: "PHYSICAL"
+      properties:
+        catalog: "INMEM-1"
+        'importer.useFullSchemaName': 'false'
+        'importer.useCatalogName': 'false'
+        'importer.schemaName': 'PUBLIC'

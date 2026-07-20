@@ -1,0 +1,28 @@
+version: v2
+
+plugins:
+
+  # Go
+  - remote: buf.build/protocolbuffers/go
+    out: sdk-go
+    opt:
+      - paths=source_relative
+
+  - remote: buf.build/grpc/go
+    out: sdk-go
+    opt:
+      - paths=source_relative
+
+  # Java
+  - remote: buf.build/protocolbuffers/java
+    out: sdk-java/generated
+
+  - remote: buf.build/grpc/java
+    out: sdk-java/generated
+
+  # Python
+  - remote: buf.build/protocolbuffers/python
+    out: sdk-python/generated
+
+  - remote: buf.build/grpc/python
+    out: sdk-python/generated

@@ -1,0 +1,6 @@
+tools/bin/
+sdk-go/go.sum
+scenarios/minimal/client.ks
+scenarios/minimal/server.ks
+scenarios/minimal/test-descriptor-bundle.zip
+scenarios/minimal/db/tx.db
