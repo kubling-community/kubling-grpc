@@ -16,13 +16,15 @@ dataSources:
       maxConnectionLifeTimeMilliseconds: 14400000
       cache:
         enabled: false
-        ttlSeconds: 43200
       allowBruteForceOperations: false
       useKublingDDL: true
       ddlFilePaths:
         - "bundle:sample.sql"
       softTransactions:
-        enabled: false
+        enabled: true
+        strategy: "IMMEDIATE_OPERATION"
+        mvcc:
+          enabled: false
     schema:
       type: "PHYSICAL"
       properties:
