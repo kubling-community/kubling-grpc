@@ -27,6 +27,8 @@ type ValueType int32
 
 const (
 	// Unspecified type.
+	// Preserved for generated-source compatibility.
+	// buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
 	ValueType_VALUE_TYPE_UNKNOWN ValueType = 0
 	// Variable-length character string.
 	ValueType_VALUE_TYPE_STRING ValueType = 1

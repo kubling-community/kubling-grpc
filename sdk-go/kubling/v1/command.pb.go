@@ -535,8 +535,9 @@ type ExecRequest struct {
 	// SQL statement.
 	Sql string `protobuf:"bytes,2,opt,name=sql,proto3" json:"sql,omitempty"`
 	// Positional SQL parameters.
-	Params              []*Parameter `protobuf:"bytes,3,rep,name=params,proto3" json:"params,omitempty"`
-	ReturnGeneratedKeys bool         `protobuf:"varint,4,opt,name=returnGeneratedKeys,proto3" json:"returnGeneratedKeys,omitempty"`
+	Params []*Parameter `protobuf:"bytes,3,rep,name=params,proto3" json:"params,omitempty"`
+	// buf:lint:ignore FIELD_LOWER_SNAKE_CASE
+	ReturnGeneratedKeys bool `protobuf:"varint,4,opt,name=returnGeneratedKeys,proto3" json:"returnGeneratedKeys,omitempty"`
 	unknownFields       protoimpl.UnknownFields
 	sizeCache           protoimpl.SizeCache
 }
