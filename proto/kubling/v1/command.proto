@@ -2,30 +2,29 @@ syntax = "proto3";
 
 package kubling.v1;
 
+// Preserves transitive access to value types previously declared in this file.
+// buf:lint:ignore IMPORT_NO_PUBLIC
+import public "kubling/v1/value.proto";
+
 option go_package = "github.com/kubling-community/kubling-grpc/sdk-go/gen/kubling/v1;kublingv1";
 option java_multiple_files = true;
-option java_package = "com.kubling.transport.grpc";
 option java_outer_classname = "CommandProto";
-
-import public "kubling/v1/value.proto";
+option java_package = "com.kubling.transport.grpc";
 
 // ============================================================================
 // Kubling gRPC Public API
 // ============================================================================
 
 service SessionService {
+  rpc Login(LoginRequest) returns (LoginResponse);
 
-  rpc Login(LoginRequest)
-      returns (LoginResponse);
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
 
-  rpc Logout(LogoutRequest)
-      returns (LogoutResponse);
+  rpc Ping(PingRequest) returns (PingResponse);
 
-  rpc Ping(PingRequest)
-      returns (PingResponse);
-
-  rpc PingSession(SessionPingRequest)
-      returns (SessionPingResponse);
+  // buf:lint:ignore RPC_REQUEST_STANDARD_NAME
+  // buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
+  rpc PingSession(SessionPingRequest) returns (SessionPingResponse);
 }
 
 message LoginRequest {
@@ -63,8 +62,7 @@ message LogoutResponse {
   bool success = 1;
 }
 
-message PingRequest {
-}
+message PingRequest {}
 
 message PingResponse {
   bool ok = 1;
@@ -88,33 +86,27 @@ message SessionPingResponse {
 //
 // Internally, requests are mapped to the existing Kubling engine request model.
 service QueryService {
-
   // Executes INSERT, UPDATE, DELETE and DDL statements.
   rpc Exec(ExecRequest) returns (ExecResponse);
 
   // Executes a SQL query and streams result batches.
+  // buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
   rpc Query(QueryRequest) returns (stream QueryBatch);
 
   // Starts a transaction and returns a transaction identifier.
-  rpc BeginTransaction(BeginTransactionRequest)
-      returns (BeginTransactionResponse);
+  rpc BeginTransaction(BeginTransactionRequest) returns (BeginTransactionResponse);
 
   // Commits a transaction.
-  rpc CommitTransaction(CommitTransactionRequest)
-      returns (CommitTransactionResponse);
+  rpc CommitTransaction(CommitTransactionRequest) returns (CommitTransactionResponse);
 
   // Rolls back a transaction.
-  rpc RollbackTransaction(RollbackTransactionRequest)
-      returns (RollbackTransactionResponse);
+  rpc RollbackTransaction(RollbackTransactionRequest) returns (RollbackTransactionResponse);
 
-  rpc IsInTransaction(IsInTransactionRequest)
-      returns (IsInTransactionResponse);
+  rpc IsInTransaction(IsInTransactionRequest) returns (IsInTransactionResponse);
 
   // Returns server metadata and capabilities.
-  rpc GetServerInfo(GetServerInfoRequest)
-      returns (GetServerInfoResponse);
+  rpc GetServerInfo(GetServerInfoRequest) returns (GetServerInfoResponse);
 }
-
 
 // ============================================================================
 // Parameters
@@ -122,7 +114,6 @@ service QueryService {
 
 // Positional SQL parameter.
 message Parameter {
-
   // Parameter value.
   Value value = 1;
 }
@@ -138,7 +129,6 @@ message Parameter {
 // - UPDATE
 // - DELETE
 message ExecRequest {
-
   string expiring_token = 1;
 
   // SQL statement.
@@ -147,12 +137,12 @@ message ExecRequest {
   // Positional SQL parameters.
   repeated Parameter params = 3;
 
+  // buf:lint:ignore FIELD_LOWER_SNAKE_CASE
   bool returnGeneratedKeys = 4;
 }
 
 // SQL execution response.
 message ExecResponse {
-
   int64 affected_rows = 1;
 
   repeated int64 update_counts = 2;
@@ -166,7 +156,6 @@ message ExecResponse {
 
 // SQL query request.
 message QueryRequest {
-
   string expiring_token = 1;
 
   string session_id = 2;
@@ -185,7 +174,6 @@ message QueryRequest {
 
 // Result column metadata.
 message Column {
-
   // Column name.
   string name = 1;
 
@@ -197,19 +185,16 @@ message Column {
   int32 precision = 4;
 
   int32 scale = 5;
-
 }
 
 // Result row.
 message Row {
-
   // Positional row values.
   repeated Value values = 1;
 }
 
 // Streamed query batch.
 message QueryBatch {
-
   // Returned columns metadata.
   //
   // Typically sent in the first batch.
@@ -217,7 +202,6 @@ message QueryBatch {
 
   // Batch rows.
   repeated Row rows = 2;
-
 }
 
 // ============================================================================
@@ -230,8 +214,7 @@ message BeginTransactionRequest {
 }
 
 // Transaction start response.
-message BeginTransactionResponse {
-}
+message BeginTransactionResponse {}
 
 // Transaction commit request.
 message CommitTransactionRequest {
@@ -270,7 +253,6 @@ message GetServerInfoRequest {}
 
 // Server metadata response.
 message GetServerInfoResponse {
-
   // Kubling server version.
   //
   // Example:
