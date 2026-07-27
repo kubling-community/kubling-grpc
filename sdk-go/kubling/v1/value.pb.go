@@ -194,14 +194,14 @@ func (*NullValue) Descriptor() ([]byte, []int) {
 
 // Generic typed value.
 //
-// The "type" field defines the logical Kubling semantic type.
+// The selected "kind" field defines the logical Kubling semantic type.
 //
 // The concrete wire representation may reuse protobuf primitives.
 //
 // Examples:
-// - VALUE_TYPE_BIGDECIMAL -> decimal_value
+// - VALUE_TYPE_BIGDECIMAL -> bigdecimal_value
 // - VALUE_TYPE_TIMESTAMP -> timestamp_value
-// - VALUE_TYPE_BLOB -> bytes_value
+// - VALUE_TYPE_BLOB -> blob_value
 type Value struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Types that are valid to be assigned to Kind:
@@ -432,6 +432,7 @@ func (x *Value) GetClobValue() *ClobValue {
 	return nil
 }
 
+// Deprecated: Marked as deprecated in kubling/v1/value.proto.
 func (x *Value) GetXmlValue() string {
 	if x != nil {
 		if x, ok := x.Kind.(*Value_XmlValue); ok {
@@ -485,7 +486,7 @@ type Value_VarbinaryValue struct {
 }
 
 type Value_CharValue struct {
-	CharValue string `protobuf:"bytes,4,opt,name=char_value,json=charValue,proto3,oneof"` // exactly one BMP char
+	CharValue string `protobuf:"bytes,4,opt,name=char_value,json=charValue,proto3,oneof"` // exactly one Unicode scalar value in the BMP
 }
 
 type Value_BooleanValue struct {
@@ -545,7 +546,8 @@ type Value_ClobValue struct {
 }
 
 type Value_XmlValue struct {
-	XmlValue string `protobuf:"bytes,19,opt,name=xml_value,json=xmlValue,proto3,oneof"` // deprecated
+	// Deprecated: Marked as deprecated in kubling/v1/value.proto.
+	XmlValue string `protobuf:"bytes,19,opt,name=xml_value,json=xmlValue,proto3,oneof"`
 }
 
 type Value_GeometryValue struct {
@@ -698,7 +700,7 @@ const file_kubling_v1_value_proto_rawDesc = "" +
 	"\n" +
 	"\x16kubling/v1/value.proto\x12\n" +
 	"kubling.v1\"\v\n" +
-	"\tNullValue\"\xfe\x06\n" +
+	"\tNullValue\"\x82\a\n" +
 	"\x05Value\x126\n" +
 	"\n" +
 	"null_value\x18\x01 \x01(\v2\x15.kubling.v1.NullValueH\x00R\tnullValue\x12#\n" +
@@ -728,8 +730,8 @@ const file_kubling_v1_value_proto_rawDesc = "" +
 	"\n" +
 	"blob_value\x18\x11 \x01(\v2\x15.kubling.v1.BlobValueH\x00R\tblobValue\x126\n" +
 	"\n" +
-	"clob_value\x18\x12 \x01(\v2\x15.kubling.v1.ClobValueH\x00R\tclobValue\x12\x1d\n" +
-	"\txml_value\x18\x13 \x01(\tH\x00R\bxmlValue\x12'\n" +
+	"clob_value\x18\x12 \x01(\v2\x15.kubling.v1.ClobValueH\x00R\tclobValue\x12!\n" +
+	"\txml_value\x18\x13 \x01(\tB\x02\x18\x01H\x00R\bxmlValue\x12'\n" +
 	"\x0egeometry_value\x18\x14 \x01(\fH\x00R\rgeometryValue\x12)\n" +
 	"\x0fgeography_value\x18\x15 \x01(\fH\x00R\x0egeographyValue\x12\x1f\n" +
 	"\n" +

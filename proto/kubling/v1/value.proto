@@ -131,7 +131,7 @@ message Value {
     BlobValue blob_value = 17;
     ClobValue clob_value = 18;
 
-    string xml_value = 19; [deprecated = true];
+    string xml_value = 19 [deprecated = true];
     bytes geometry_value = 20;
     bytes geography_value = 21;
 
