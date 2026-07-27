@@ -1,0 +1,147 @@
+syntax = "proto3";
+
+package kubling.v1;
+
+option go_package = "github.com/kubling-community/kubling-grpc/sdk-go/gen/kubling/v1;kublingv1";
+option java_multiple_files = true;
+option java_outer_classname = "ValueProto";
+option java_package = "com.kubling.transport.grpc";
+
+// ============================================================================
+// Value Types
+// ============================================================================
+
+// Canonical Kubling logical types.
+// These values represent logical engine-level semantic types.
+enum ValueType {
+  // Unspecified type.
+  // Preserved for generated-source compatibility.
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  VALUE_TYPE_UNKNOWN = 0;
+
+  // Variable-length character string.
+  VALUE_TYPE_STRING = 1;
+
+  // Variable-length binary value.
+  VALUE_TYPE_VARBINARY = 2;
+
+  // Single UTF-16 character.
+  VALUE_TYPE_CHAR = 3;
+
+  // Boolean value.
+  VALUE_TYPE_BOOLEAN = 4;
+
+  // Signed 8-bit integer.
+  VALUE_TYPE_BYTE = 5;
+
+  // Signed 16-bit integer.
+  VALUE_TYPE_SHORT = 6;
+
+  // Signed 32-bit integer.
+  VALUE_TYPE_INTEGER = 7;
+
+  // Signed 64-bit integer.
+  VALUE_TYPE_LONG = 8;
+
+  // Arbitrary precision integer.
+  VALUE_TYPE_BIGINTEGER = 9;
+
+  // 32-bit floating-point number.
+  VALUE_TYPE_FLOAT = 10;
+
+  // 64-bit floating-point number.
+  VALUE_TYPE_DOUBLE = 11;
+
+  // Arbitrary precision decimal.
+  VALUE_TYPE_BIGDECIMAL = 12;
+
+  // Calendar date.
+  VALUE_TYPE_DATE = 13;
+
+  // Local time.
+  VALUE_TYPE_TIME = 14;
+
+  // Timestamp with fractional seconds.
+  VALUE_TYPE_TIMESTAMP = 15;
+
+  // Binary large object.
+  VALUE_TYPE_BLOB = 16;
+
+  // Character large object.
+  VALUE_TYPE_CLOB = 17;
+
+  // Geospatial geometry object.
+  //
+  // Encoded using WKB (Well-Known Binary).
+  VALUE_TYPE_GEOMETRY = 18;
+
+  // Geospatial geography object.
+  //
+  // Encoded using WKB (Well-Known Binary).
+  VALUE_TYPE_GEOGRAPHY = 19;
+
+  // JSON document.
+  VALUE_TYPE_JSON = 20;
+
+  // XML document.
+  VALUE_TYPE_XML = 21;
+}
+
+// Explicit null representation.
+message NullValue {}
+
+// Generic typed value.
+//
+// The selected "kind" field defines the logical Kubling semantic type.
+//
+// The concrete wire representation may reuse protobuf primitives.
+//
+// Examples:
+// - VALUE_TYPE_BIGDECIMAL -> bigdecimal_value
+// - VALUE_TYPE_TIMESTAMP -> timestamp_value
+// - VALUE_TYPE_BLOB -> blob_value
+message Value {
+  oneof kind {
+    NullValue null_value = 1;
+
+    string string_value = 2; // string / varchar
+    bytes varbinary_value = 3; // varbinary
+
+    string char_value = 4; // exactly one Unicode scalar value in the BMP
+
+    bool boolean_value = 5;
+
+    int32 byte_value = 6; // byte / tinyint, validated -128..127
+    int32 short_value = 7; // short / smallint, validated -32768..32767
+    int32 integer_value = 8; // integer / serial
+    int64 long_value = 9; // long / bigint
+
+    string biginteger_value = 10; // arbitrary precision integer
+
+    float float_value = 11; // float / real
+    double double_value = 12; // double
+
+    string bigdecimal_value = 13; // bigdecimal / decimal
+
+    string date_value = 14; // ISO date: yyyy-MM-dd
+    string time_value = 15; // ISO local time: HH:mm:ss[.n]
+    string timestamp_value = 16; // ISO local timestamp: yyyy-MM-ddTHH:mm:ss[.n]
+
+    BlobValue blob_value = 17;
+    ClobValue clob_value = 18;
+
+    string xml_value = 19 [deprecated = true];
+    bytes geometry_value = 20;
+    bytes geography_value = 21;
+
+    string json_value = 22;
+  }
+}
+
+message BlobValue {
+  bytes data = 1;
+}
+
+message ClobValue {
+  string data = 1;
+}

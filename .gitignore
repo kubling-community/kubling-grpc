@@ -4,3 +4,8 @@ scenarios/minimal/client.ks
 scenarios/minimal/server.ks
 scenarios/minimal/test-descriptor-bundle.zip
 scenarios/minimal/db/tx.db
+support/
+sdk-java/generated
+sdk-python/generated
+.idea/
+kubling-grpc.iml

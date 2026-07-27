@@ -32,6 +32,8 @@ type SessionServiceClient interface {
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error)
 	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
+	// buf:lint:ignore RPC_REQUEST_STANDARD_NAME
+	// buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
 	PingSession(ctx context.Context, in *SessionPingRequest, opts ...grpc.CallOption) (*SessionPingResponse, error)
 }
 
@@ -90,6 +92,8 @@ type SessionServiceServer interface {
 	Login(context.Context, *LoginRequest) (*LoginResponse, error)
 	Logout(context.Context, *LogoutRequest) (*LogoutResponse, error)
 	Ping(context.Context, *PingRequest) (*PingResponse, error)
+	// buf:lint:ignore RPC_REQUEST_STANDARD_NAME
+	// buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
 	PingSession(context.Context, *SessionPingRequest) (*SessionPingResponse, error)
 	mustEmbedUnimplementedSessionServiceServer()
 }
@@ -260,6 +264,7 @@ type QueryServiceClient interface {
 	// Executes INSERT, UPDATE, DELETE and DDL statements.
 	Exec(ctx context.Context, in *ExecRequest, opts ...grpc.CallOption) (*ExecResponse, error)
 	// Executes a SQL query and streams result batches.
+	// buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
 	Query(ctx context.Context, in *QueryRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[QueryBatch], error)
 	// Starts a transaction and returns a transaction identifier.
 	BeginTransaction(ctx context.Context, in *BeginTransactionRequest, opts ...grpc.CallOption) (*BeginTransactionResponse, error)
@@ -375,6 +380,7 @@ type QueryServiceServer interface {
 	// Executes INSERT, UPDATE, DELETE and DDL statements.
 	Exec(context.Context, *ExecRequest) (*ExecResponse, error)
 	// Executes a SQL query and streams result batches.
+	// buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
 	Query(*QueryRequest, grpc.ServerStreamingServer[QueryBatch]) error
 	// Starts a transaction and returns a transaction identifier.
 	BeginTransaction(context.Context, *BeginTransactionRequest) (*BeginTransactionResponse, error)
