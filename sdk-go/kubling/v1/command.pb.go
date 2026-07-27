@@ -21,140 +21,6 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Canonical Kubling logical types.
-// These values represent logical engine-level semantic types.
-type ValueType int32
-
-const (
-	// Unspecified type.
-	ValueType_VALUE_TYPE_UNKNOWN ValueType = 0
-	// Variable-length character string.
-	ValueType_VALUE_TYPE_STRING ValueType = 1
-	// Variable-length binary value.
-	ValueType_VALUE_TYPE_VARBINARY ValueType = 2
-	// Single UTF-16 character.
-	ValueType_VALUE_TYPE_CHAR ValueType = 3
-	// Boolean value.
-	ValueType_VALUE_TYPE_BOOLEAN ValueType = 4
-	// Signed 8-bit integer.
-	ValueType_VALUE_TYPE_BYTE ValueType = 5
-	// Signed 16-bit integer.
-	ValueType_VALUE_TYPE_SHORT ValueType = 6
-	// Signed 32-bit integer.
-	ValueType_VALUE_TYPE_INTEGER ValueType = 7
-	// Signed 64-bit integer.
-	ValueType_VALUE_TYPE_LONG ValueType = 8
-	// Arbitrary precision integer.
-	ValueType_VALUE_TYPE_BIGINTEGER ValueType = 9
-	// 32-bit floating-point number.
-	ValueType_VALUE_TYPE_FLOAT ValueType = 10
-	// 64-bit floating-point number.
-	ValueType_VALUE_TYPE_DOUBLE ValueType = 11
-	// Arbitrary precision decimal.
-	ValueType_VALUE_TYPE_BIGDECIMAL ValueType = 12
-	// Calendar date.
-	ValueType_VALUE_TYPE_DATE ValueType = 13
-	// Local time.
-	ValueType_VALUE_TYPE_TIME ValueType = 14
-	// Timestamp with fractional seconds.
-	ValueType_VALUE_TYPE_TIMESTAMP ValueType = 15
-	// Binary large object.
-	ValueType_VALUE_TYPE_BLOB ValueType = 16
-	// Character large object.
-	ValueType_VALUE_TYPE_CLOB ValueType = 17
-	// Geospatial geometry object.
-	//
-	// Encoded using WKB (Well-Known Binary).
-	ValueType_VALUE_TYPE_GEOMETRY ValueType = 18
-	// Geospatial geography object.
-	//
-	// Encoded using WKB (Well-Known Binary).
-	ValueType_VALUE_TYPE_GEOGRAPHY ValueType = 19
-	// JSON document.
-	ValueType_VALUE_TYPE_JSON ValueType = 20
-	// XML document.
-	ValueType_VALUE_TYPE_XML ValueType = 21
-)
-
-// Enum value maps for ValueType.
-var (
-	ValueType_name = map[int32]string{
-		0:  "VALUE_TYPE_UNKNOWN",
-		1:  "VALUE_TYPE_STRING",
-		2:  "VALUE_TYPE_VARBINARY",
-		3:  "VALUE_TYPE_CHAR",
-		4:  "VALUE_TYPE_BOOLEAN",
-		5:  "VALUE_TYPE_BYTE",
-		6:  "VALUE_TYPE_SHORT",
-		7:  "VALUE_TYPE_INTEGER",
-		8:  "VALUE_TYPE_LONG",
-		9:  "VALUE_TYPE_BIGINTEGER",
-		10: "VALUE_TYPE_FLOAT",
-		11: "VALUE_TYPE_DOUBLE",
-		12: "VALUE_TYPE_BIGDECIMAL",
-		13: "VALUE_TYPE_DATE",
-		14: "VALUE_TYPE_TIME",
-		15: "VALUE_TYPE_TIMESTAMP",
-		16: "VALUE_TYPE_BLOB",
-		17: "VALUE_TYPE_CLOB",
-		18: "VALUE_TYPE_GEOMETRY",
-		19: "VALUE_TYPE_GEOGRAPHY",
-		20: "VALUE_TYPE_JSON",
-		21: "VALUE_TYPE_XML",
-	}
-	ValueType_value = map[string]int32{
-		"VALUE_TYPE_UNKNOWN":    0,
-		"VALUE_TYPE_STRING":     1,
-		"VALUE_TYPE_VARBINARY":  2,
-		"VALUE_TYPE_CHAR":       3,
-		"VALUE_TYPE_BOOLEAN":    4,
-		"VALUE_TYPE_BYTE":       5,
-		"VALUE_TYPE_SHORT":      6,
-		"VALUE_TYPE_INTEGER":    7,
-		"VALUE_TYPE_LONG":       8,
-		"VALUE_TYPE_BIGINTEGER": 9,
-		"VALUE_TYPE_FLOAT":      10,
-		"VALUE_TYPE_DOUBLE":     11,
-		"VALUE_TYPE_BIGDECIMAL": 12,
-		"VALUE_TYPE_DATE":       13,
-		"VALUE_TYPE_TIME":       14,
-		"VALUE_TYPE_TIMESTAMP":  15,
-		"VALUE_TYPE_BLOB":       16,
-		"VALUE_TYPE_CLOB":       17,
-		"VALUE_TYPE_GEOMETRY":   18,
-		"VALUE_TYPE_GEOGRAPHY":  19,
-		"VALUE_TYPE_JSON":       20,
-		"VALUE_TYPE_XML":        21,
-	}
-)
-
-func (x ValueType) Enum() *ValueType {
-	p := new(ValueType)
-	*p = x
-	return p
-}
-
-func (x ValueType) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (ValueType) Descriptor() protoreflect.EnumDescriptor {
-	return file_kubling_v1_command_proto_enumTypes[0].Descriptor()
-}
-
-func (ValueType) Type() protoreflect.EnumType {
-	return &file_kubling_v1_command_proto_enumTypes[0]
-}
-
-func (x ValueType) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use ValueType.Descriptor instead.
-func (ValueType) EnumDescriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{0}
-}
-
 type LoginRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	VdbName         string                 `protobuf:"bytes,1,opt,name=vdb_name,json=vdbName,proto3" json:"vdb_name,omitempty"`
@@ -611,543 +477,6 @@ func (x *SessionPingResponse) GetValid() bool {
 	return false
 }
 
-// Explicit null representation.
-type NullValue struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *NullValue) Reset() {
-	*x = NullValue{}
-	mi := &file_kubling_v1_command_proto_msgTypes[8]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *NullValue) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*NullValue) ProtoMessage() {}
-
-func (x *NullValue) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[8]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use NullValue.ProtoReflect.Descriptor instead.
-func (*NullValue) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{8}
-}
-
-// Generic typed value.
-//
-// The "type" field defines the logical Kubling semantic type.
-//
-// The concrete wire representation may reuse protobuf primitives.
-//
-// Examples:
-// - VALUE_TYPE_BIGDECIMAL -> decimal_value
-// - VALUE_TYPE_TIMESTAMP -> timestamp_value
-// - VALUE_TYPE_BLOB -> bytes_value
-type Value struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Types that are valid to be assigned to Kind:
-	//
-	//	*Value_NullValue
-	//	*Value_StringValue
-	//	*Value_VarbinaryValue
-	//	*Value_CharValue
-	//	*Value_BooleanValue
-	//	*Value_ByteValue
-	//	*Value_ShortValue
-	//	*Value_IntegerValue
-	//	*Value_LongValue
-	//	*Value_BigintegerValue
-	//	*Value_FloatValue
-	//	*Value_DoubleValue
-	//	*Value_BigdecimalValue
-	//	*Value_DateValue
-	//	*Value_TimeValue
-	//	*Value_TimestampValue
-	//	*Value_BlobValue
-	//	*Value_ClobValue
-	//	*Value_XmlValue
-	//	*Value_GeometryValue
-	//	*Value_GeographyValue
-	//	*Value_JsonValue
-	Kind          isValue_Kind `protobuf_oneof:"kind"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *Value) Reset() {
-	*x = Value{}
-	mi := &file_kubling_v1_command_proto_msgTypes[9]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Value) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Value) ProtoMessage() {}
-
-func (x *Value) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[9]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Value.ProtoReflect.Descriptor instead.
-func (*Value) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *Value) GetKind() isValue_Kind {
-	if x != nil {
-		return x.Kind
-	}
-	return nil
-}
-
-func (x *Value) GetNullValue() *NullValue {
-	if x != nil {
-		if x, ok := x.Kind.(*Value_NullValue); ok {
-			return x.NullValue
-		}
-	}
-	return nil
-}
-
-func (x *Value) GetStringValue() string {
-	if x != nil {
-		if x, ok := x.Kind.(*Value_StringValue); ok {
-			return x.StringValue
-		}
-	}
-	return ""
-}
-
-func (x *Value) GetVarbinaryValue() []byte {
-	if x != nil {
-		if x, ok := x.Kind.(*Value_VarbinaryValue); ok {
-			return x.VarbinaryValue
-		}
-	}
-	return nil
-}
-
-func (x *Value) GetCharValue() string {
-	if x != nil {
-		if x, ok := x.Kind.(*Value_CharValue); ok {
-			return x.CharValue
-		}
-	}
-	return ""
-}
-
-func (x *Value) GetBooleanValue() bool {
-	if x != nil {
-		if x, ok := x.Kind.(*Value_BooleanValue); ok {
-			return x.BooleanValue
-		}
-	}
-	return false
-}
-
-func (x *Value) GetByteValue() int32 {
-	if x != nil {
-		if x, ok := x.Kind.(*Value_ByteValue); ok {
-			return x.ByteValue
-		}
-	}
-	return 0
-}
-
-func (x *Value) GetShortValue() int32 {
-	if x != nil {
-		if x, ok := x.Kind.(*Value_ShortValue); ok {
-			return x.ShortValue
-		}
-	}
-	return 0
-}
-
-func (x *Value) GetIntegerValue() int32 {
-	if x != nil {
-		if x, ok := x.Kind.(*Value_IntegerValue); ok {
-			return x.IntegerValue
-		}
-	}
-	return 0
-}
-
-func (x *Value) GetLongValue() int64 {
-	if x != nil {
-		if x, ok := x.Kind.(*Value_LongValue); ok {
-			return x.LongValue
-		}
-	}
-	return 0
-}
-
-func (x *Value) GetBigintegerValue() string {
-	if x != nil {
-		if x, ok := x.Kind.(*Value_BigintegerValue); ok {
-			return x.BigintegerValue
-		}
-	}
-	return ""
-}
-
-func (x *Value) GetFloatValue() float32 {
-	if x != nil {
-		if x, ok := x.Kind.(*Value_FloatValue); ok {
-			return x.FloatValue
-		}
-	}
-	return 0
-}
-
-func (x *Value) GetDoubleValue() float64 {
-	if x != nil {
-		if x, ok := x.Kind.(*Value_DoubleValue); ok {
-			return x.DoubleValue
-		}
-	}
-	return 0
-}
-
-func (x *Value) GetBigdecimalValue() string {
-	if x != nil {
-		if x, ok := x.Kind.(*Value_BigdecimalValue); ok {
-			return x.BigdecimalValue
-		}
-	}
-	return ""
-}
-
-func (x *Value) GetDateValue() string {
-	if x != nil {
-		if x, ok := x.Kind.(*Value_DateValue); ok {
-			return x.DateValue
-		}
-	}
-	return ""
-}
-
-func (x *Value) GetTimeValue() string {
-	if x != nil {
-		if x, ok := x.Kind.(*Value_TimeValue); ok {
-			return x.TimeValue
-		}
-	}
-	return ""
-}
-
-func (x *Value) GetTimestampValue() string {
-	if x != nil {
-		if x, ok := x.Kind.(*Value_TimestampValue); ok {
-			return x.TimestampValue
-		}
-	}
-	return ""
-}
-
-func (x *Value) GetBlobValue() *BlobValue {
-	if x != nil {
-		if x, ok := x.Kind.(*Value_BlobValue); ok {
-			return x.BlobValue
-		}
-	}
-	return nil
-}
-
-func (x *Value) GetClobValue() *ClobValue {
-	if x != nil {
-		if x, ok := x.Kind.(*Value_ClobValue); ok {
-			return x.ClobValue
-		}
-	}
-	return nil
-}
-
-func (x *Value) GetXmlValue() string {
-	if x != nil {
-		if x, ok := x.Kind.(*Value_XmlValue); ok {
-			return x.XmlValue
-		}
-	}
-	return ""
-}
-
-func (x *Value) GetGeometryValue() []byte {
-	if x != nil {
-		if x, ok := x.Kind.(*Value_GeometryValue); ok {
-			return x.GeometryValue
-		}
-	}
-	return nil
-}
-
-func (x *Value) GetGeographyValue() []byte {
-	if x != nil {
-		if x, ok := x.Kind.(*Value_GeographyValue); ok {
-			return x.GeographyValue
-		}
-	}
-	return nil
-}
-
-func (x *Value) GetJsonValue() string {
-	if x != nil {
-		if x, ok := x.Kind.(*Value_JsonValue); ok {
-			return x.JsonValue
-		}
-	}
-	return ""
-}
-
-type isValue_Kind interface {
-	isValue_Kind()
-}
-
-type Value_NullValue struct {
-	NullValue *NullValue `protobuf:"bytes,1,opt,name=null_value,json=nullValue,proto3,oneof"`
-}
-
-type Value_StringValue struct {
-	StringValue string `protobuf:"bytes,2,opt,name=string_value,json=stringValue,proto3,oneof"` // string / varchar
-}
-
-type Value_VarbinaryValue struct {
-	VarbinaryValue []byte `protobuf:"bytes,3,opt,name=varbinary_value,json=varbinaryValue,proto3,oneof"` // varbinary
-}
-
-type Value_CharValue struct {
-	CharValue string `protobuf:"bytes,4,opt,name=char_value,json=charValue,proto3,oneof"` // exactly one BMP char
-}
-
-type Value_BooleanValue struct {
-	BooleanValue bool `protobuf:"varint,5,opt,name=boolean_value,json=booleanValue,proto3,oneof"`
-}
-
-type Value_ByteValue struct {
-	ByteValue int32 `protobuf:"varint,6,opt,name=byte_value,json=byteValue,proto3,oneof"` // byte / tinyint, validated -128..127
-}
-
-type Value_ShortValue struct {
-	ShortValue int32 `protobuf:"varint,7,opt,name=short_value,json=shortValue,proto3,oneof"` // short / smallint, validated -32768..32767
-}
-
-type Value_IntegerValue struct {
-	IntegerValue int32 `protobuf:"varint,8,opt,name=integer_value,json=integerValue,proto3,oneof"` // integer / serial
-}
-
-type Value_LongValue struct {
-	LongValue int64 `protobuf:"varint,9,opt,name=long_value,json=longValue,proto3,oneof"` // long / bigint
-}
-
-type Value_BigintegerValue struct {
-	BigintegerValue string `protobuf:"bytes,10,opt,name=biginteger_value,json=bigintegerValue,proto3,oneof"` // arbitrary precision integer
-}
-
-type Value_FloatValue struct {
-	FloatValue float32 `protobuf:"fixed32,11,opt,name=float_value,json=floatValue,proto3,oneof"` // float / real
-}
-
-type Value_DoubleValue struct {
-	DoubleValue float64 `protobuf:"fixed64,12,opt,name=double_value,json=doubleValue,proto3,oneof"` // double
-}
-
-type Value_BigdecimalValue struct {
-	BigdecimalValue string `protobuf:"bytes,13,opt,name=bigdecimal_value,json=bigdecimalValue,proto3,oneof"` // bigdecimal / decimal
-}
-
-type Value_DateValue struct {
-	DateValue string `protobuf:"bytes,14,opt,name=date_value,json=dateValue,proto3,oneof"` // ISO date: yyyy-MM-dd
-}
-
-type Value_TimeValue struct {
-	TimeValue string `protobuf:"bytes,15,opt,name=time_value,json=timeValue,proto3,oneof"` // ISO local time: HH:mm:ss[.n]
-}
-
-type Value_TimestampValue struct {
-	TimestampValue string `protobuf:"bytes,16,opt,name=timestamp_value,json=timestampValue,proto3,oneof"` // ISO local timestamp: yyyy-MM-ddTHH:mm:ss[.n]
-}
-
-type Value_BlobValue struct {
-	BlobValue *BlobValue `protobuf:"bytes,17,opt,name=blob_value,json=blobValue,proto3,oneof"`
-}
-
-type Value_ClobValue struct {
-	ClobValue *ClobValue `protobuf:"bytes,18,opt,name=clob_value,json=clobValue,proto3,oneof"`
-}
-
-type Value_XmlValue struct {
-	XmlValue string `protobuf:"bytes,19,opt,name=xml_value,json=xmlValue,proto3,oneof"` // deprecated
-}
-
-type Value_GeometryValue struct {
-	GeometryValue []byte `protobuf:"bytes,20,opt,name=geometry_value,json=geometryValue,proto3,oneof"`
-}
-
-type Value_GeographyValue struct {
-	GeographyValue []byte `protobuf:"bytes,21,opt,name=geography_value,json=geographyValue,proto3,oneof"`
-}
-
-type Value_JsonValue struct {
-	JsonValue string `protobuf:"bytes,22,opt,name=json_value,json=jsonValue,proto3,oneof"`
-}
-
-func (*Value_NullValue) isValue_Kind() {}
-
-func (*Value_StringValue) isValue_Kind() {}
-
-func (*Value_VarbinaryValue) isValue_Kind() {}
-
-func (*Value_CharValue) isValue_Kind() {}
-
-func (*Value_BooleanValue) isValue_Kind() {}
-
-func (*Value_ByteValue) isValue_Kind() {}
-
-func (*Value_ShortValue) isValue_Kind() {}
-
-func (*Value_IntegerValue) isValue_Kind() {}
-
-func (*Value_LongValue) isValue_Kind() {}
-
-func (*Value_BigintegerValue) isValue_Kind() {}
-
-func (*Value_FloatValue) isValue_Kind() {}
-
-func (*Value_DoubleValue) isValue_Kind() {}
-
-func (*Value_BigdecimalValue) isValue_Kind() {}
-
-func (*Value_DateValue) isValue_Kind() {}
-
-func (*Value_TimeValue) isValue_Kind() {}
-
-func (*Value_TimestampValue) isValue_Kind() {}
-
-func (*Value_BlobValue) isValue_Kind() {}
-
-func (*Value_ClobValue) isValue_Kind() {}
-
-func (*Value_XmlValue) isValue_Kind() {}
-
-func (*Value_GeometryValue) isValue_Kind() {}
-
-func (*Value_GeographyValue) isValue_Kind() {}
-
-func (*Value_JsonValue) isValue_Kind() {}
-
-type BlobValue struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Data          []byte                 `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *BlobValue) Reset() {
-	*x = BlobValue{}
-	mi := &file_kubling_v1_command_proto_msgTypes[10]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *BlobValue) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*BlobValue) ProtoMessage() {}
-
-func (x *BlobValue) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[10]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use BlobValue.ProtoReflect.Descriptor instead.
-func (*BlobValue) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{10}
-}
-
-func (x *BlobValue) GetData() []byte {
-	if x != nil {
-		return x.Data
-	}
-	return nil
-}
-
-type ClobValue struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Data          string                 `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ClobValue) Reset() {
-	*x = ClobValue{}
-	mi := &file_kubling_v1_command_proto_msgTypes[11]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ClobValue) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ClobValue) ProtoMessage() {}
-
-func (x *ClobValue) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[11]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ClobValue.ProtoReflect.Descriptor instead.
-func (*ClobValue) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{11}
-}
-
-func (x *ClobValue) GetData() string {
-	if x != nil {
-		return x.Data
-	}
-	return ""
-}
-
 // Positional SQL parameter.
 type Parameter struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -1159,7 +488,7 @@ type Parameter struct {
 
 func (x *Parameter) Reset() {
 	*x = Parameter{}
-	mi := &file_kubling_v1_command_proto_msgTypes[12]
+	mi := &file_kubling_v1_command_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1171,7 +500,7 @@ func (x *Parameter) String() string {
 func (*Parameter) ProtoMessage() {}
 
 func (x *Parameter) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[12]
+	mi := &file_kubling_v1_command_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1184,7 +513,7 @@ func (x *Parameter) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Parameter.ProtoReflect.Descriptor instead.
 func (*Parameter) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{12}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Parameter) GetValue() *Value {
@@ -1214,7 +543,7 @@ type ExecRequest struct {
 
 func (x *ExecRequest) Reset() {
 	*x = ExecRequest{}
-	mi := &file_kubling_v1_command_proto_msgTypes[13]
+	mi := &file_kubling_v1_command_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1226,7 +555,7 @@ func (x *ExecRequest) String() string {
 func (*ExecRequest) ProtoMessage() {}
 
 func (x *ExecRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[13]
+	mi := &file_kubling_v1_command_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1239,7 +568,7 @@ func (x *ExecRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecRequest.ProtoReflect.Descriptor instead.
 func (*ExecRequest) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{13}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ExecRequest) GetExpiringToken() string {
@@ -1282,7 +611,7 @@ type ExecResponse struct {
 
 func (x *ExecResponse) Reset() {
 	*x = ExecResponse{}
-	mi := &file_kubling_v1_command_proto_msgTypes[14]
+	mi := &file_kubling_v1_command_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1294,7 +623,7 @@ func (x *ExecResponse) String() string {
 func (*ExecResponse) ProtoMessage() {}
 
 func (x *ExecResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[14]
+	mi := &file_kubling_v1_command_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1307,7 +636,7 @@ func (x *ExecResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecResponse.ProtoReflect.Descriptor instead.
 func (*ExecResponse) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{14}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ExecResponse) GetAffectedRows() int64 {
@@ -1350,7 +679,7 @@ type QueryRequest struct {
 
 func (x *QueryRequest) Reset() {
 	*x = QueryRequest{}
-	mi := &file_kubling_v1_command_proto_msgTypes[15]
+	mi := &file_kubling_v1_command_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1362,7 +691,7 @@ func (x *QueryRequest) String() string {
 func (*QueryRequest) ProtoMessage() {}
 
 func (x *QueryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[15]
+	mi := &file_kubling_v1_command_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1375,7 +704,7 @@ func (x *QueryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryRequest.ProtoReflect.Descriptor instead.
 func (*QueryRequest) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{15}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *QueryRequest) GetExpiringToken() string {
@@ -1429,7 +758,7 @@ type Column struct {
 
 func (x *Column) Reset() {
 	*x = Column{}
-	mi := &file_kubling_v1_command_proto_msgTypes[16]
+	mi := &file_kubling_v1_command_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1441,7 +770,7 @@ func (x *Column) String() string {
 func (*Column) ProtoMessage() {}
 
 func (x *Column) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[16]
+	mi := &file_kubling_v1_command_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1454,7 +783,7 @@ func (x *Column) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Column.ProtoReflect.Descriptor instead.
 func (*Column) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{16}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *Column) GetName() string {
@@ -1503,7 +832,7 @@ type Row struct {
 
 func (x *Row) Reset() {
 	*x = Row{}
-	mi := &file_kubling_v1_command_proto_msgTypes[17]
+	mi := &file_kubling_v1_command_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1515,7 +844,7 @@ func (x *Row) String() string {
 func (*Row) ProtoMessage() {}
 
 func (x *Row) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[17]
+	mi := &file_kubling_v1_command_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1528,7 +857,7 @@ func (x *Row) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Row.ProtoReflect.Descriptor instead.
 func (*Row) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{17}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *Row) GetValues() []*Value {
@@ -1553,7 +882,7 @@ type QueryBatch struct {
 
 func (x *QueryBatch) Reset() {
 	*x = QueryBatch{}
-	mi := &file_kubling_v1_command_proto_msgTypes[18]
+	mi := &file_kubling_v1_command_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1565,7 +894,7 @@ func (x *QueryBatch) String() string {
 func (*QueryBatch) ProtoMessage() {}
 
 func (x *QueryBatch) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[18]
+	mi := &file_kubling_v1_command_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1578,7 +907,7 @@ func (x *QueryBatch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryBatch.ProtoReflect.Descriptor instead.
 func (*QueryBatch) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{18}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *QueryBatch) GetColumns() []*Column {
@@ -1605,7 +934,7 @@ type BeginTransactionRequest struct {
 
 func (x *BeginTransactionRequest) Reset() {
 	*x = BeginTransactionRequest{}
-	mi := &file_kubling_v1_command_proto_msgTypes[19]
+	mi := &file_kubling_v1_command_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1617,7 +946,7 @@ func (x *BeginTransactionRequest) String() string {
 func (*BeginTransactionRequest) ProtoMessage() {}
 
 func (x *BeginTransactionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[19]
+	mi := &file_kubling_v1_command_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1630,7 +959,7 @@ func (x *BeginTransactionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BeginTransactionRequest.ProtoReflect.Descriptor instead.
 func (*BeginTransactionRequest) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{19}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *BeginTransactionRequest) GetExpiringToken() string {
@@ -1649,7 +978,7 @@ type BeginTransactionResponse struct {
 
 func (x *BeginTransactionResponse) Reset() {
 	*x = BeginTransactionResponse{}
-	mi := &file_kubling_v1_command_proto_msgTypes[20]
+	mi := &file_kubling_v1_command_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1661,7 +990,7 @@ func (x *BeginTransactionResponse) String() string {
 func (*BeginTransactionResponse) ProtoMessage() {}
 
 func (x *BeginTransactionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[20]
+	mi := &file_kubling_v1_command_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1674,7 +1003,7 @@ func (x *BeginTransactionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BeginTransactionResponse.ProtoReflect.Descriptor instead.
 func (*BeginTransactionResponse) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{20}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{16}
 }
 
 // Transaction commit request.
@@ -1687,7 +1016,7 @@ type CommitTransactionRequest struct {
 
 func (x *CommitTransactionRequest) Reset() {
 	*x = CommitTransactionRequest{}
-	mi := &file_kubling_v1_command_proto_msgTypes[21]
+	mi := &file_kubling_v1_command_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1699,7 +1028,7 @@ func (x *CommitTransactionRequest) String() string {
 func (*CommitTransactionRequest) ProtoMessage() {}
 
 func (x *CommitTransactionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[21]
+	mi := &file_kubling_v1_command_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1712,7 +1041,7 @@ func (x *CommitTransactionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CommitTransactionRequest.ProtoReflect.Descriptor instead.
 func (*CommitTransactionRequest) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{21}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *CommitTransactionRequest) GetExpiringToken() string {
@@ -1732,7 +1061,7 @@ type CommitTransactionResponse struct {
 
 func (x *CommitTransactionResponse) Reset() {
 	*x = CommitTransactionResponse{}
-	mi := &file_kubling_v1_command_proto_msgTypes[22]
+	mi := &file_kubling_v1_command_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1744,7 +1073,7 @@ func (x *CommitTransactionResponse) String() string {
 func (*CommitTransactionResponse) ProtoMessage() {}
 
 func (x *CommitTransactionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[22]
+	mi := &file_kubling_v1_command_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1757,7 +1086,7 @@ func (x *CommitTransactionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CommitTransactionResponse.ProtoReflect.Descriptor instead.
 func (*CommitTransactionResponse) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{22}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *CommitTransactionResponse) GetSuccess() bool {
@@ -1777,7 +1106,7 @@ type RollbackTransactionRequest struct {
 
 func (x *RollbackTransactionRequest) Reset() {
 	*x = RollbackTransactionRequest{}
-	mi := &file_kubling_v1_command_proto_msgTypes[23]
+	mi := &file_kubling_v1_command_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1789,7 +1118,7 @@ func (x *RollbackTransactionRequest) String() string {
 func (*RollbackTransactionRequest) ProtoMessage() {}
 
 func (x *RollbackTransactionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[23]
+	mi := &file_kubling_v1_command_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1802,7 +1131,7 @@ func (x *RollbackTransactionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RollbackTransactionRequest.ProtoReflect.Descriptor instead.
 func (*RollbackTransactionRequest) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{23}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *RollbackTransactionRequest) GetExpiringToken() string {
@@ -1822,7 +1151,7 @@ type RollbackTransactionResponse struct {
 
 func (x *RollbackTransactionResponse) Reset() {
 	*x = RollbackTransactionResponse{}
-	mi := &file_kubling_v1_command_proto_msgTypes[24]
+	mi := &file_kubling_v1_command_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1834,7 +1163,7 @@ func (x *RollbackTransactionResponse) String() string {
 func (*RollbackTransactionResponse) ProtoMessage() {}
 
 func (x *RollbackTransactionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[24]
+	mi := &file_kubling_v1_command_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1847,7 +1176,7 @@ func (x *RollbackTransactionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RollbackTransactionResponse.ProtoReflect.Descriptor instead.
 func (*RollbackTransactionResponse) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{24}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *RollbackTransactionResponse) GetSuccess() bool {
@@ -1866,7 +1195,7 @@ type IsInTransactionRequest struct {
 
 func (x *IsInTransactionRequest) Reset() {
 	*x = IsInTransactionRequest{}
-	mi := &file_kubling_v1_command_proto_msgTypes[25]
+	mi := &file_kubling_v1_command_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1878,7 +1207,7 @@ func (x *IsInTransactionRequest) String() string {
 func (*IsInTransactionRequest) ProtoMessage() {}
 
 func (x *IsInTransactionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[25]
+	mi := &file_kubling_v1_command_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1891,7 +1220,7 @@ func (x *IsInTransactionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IsInTransactionRequest.ProtoReflect.Descriptor instead.
 func (*IsInTransactionRequest) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{25}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *IsInTransactionRequest) GetExpiringToken() string {
@@ -1910,7 +1239,7 @@ type IsInTransactionResponse struct {
 
 func (x *IsInTransactionResponse) Reset() {
 	*x = IsInTransactionResponse{}
-	mi := &file_kubling_v1_command_proto_msgTypes[26]
+	mi := &file_kubling_v1_command_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1922,7 +1251,7 @@ func (x *IsInTransactionResponse) String() string {
 func (*IsInTransactionResponse) ProtoMessage() {}
 
 func (x *IsInTransactionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[26]
+	mi := &file_kubling_v1_command_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1935,7 +1264,7 @@ func (x *IsInTransactionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IsInTransactionResponse.ProtoReflect.Descriptor instead.
 func (*IsInTransactionResponse) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{26}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *IsInTransactionResponse) GetActive() bool {
@@ -1954,7 +1283,7 @@ type GetServerInfoRequest struct {
 
 func (x *GetServerInfoRequest) Reset() {
 	*x = GetServerInfoRequest{}
-	mi := &file_kubling_v1_command_proto_msgTypes[27]
+	mi := &file_kubling_v1_command_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1966,7 +1295,7 @@ func (x *GetServerInfoRequest) String() string {
 func (*GetServerInfoRequest) ProtoMessage() {}
 
 func (x *GetServerInfoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[27]
+	mi := &file_kubling_v1_command_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1979,7 +1308,7 @@ func (x *GetServerInfoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetServerInfoRequest.ProtoReflect.Descriptor instead.
 func (*GetServerInfoRequest) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{27}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{23}
 }
 
 // Server metadata response.
@@ -1998,7 +1327,7 @@ type GetServerInfoResponse struct {
 
 func (x *GetServerInfoResponse) Reset() {
 	*x = GetServerInfoResponse{}
-	mi := &file_kubling_v1_command_proto_msgTypes[28]
+	mi := &file_kubling_v1_command_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2010,7 +1339,7 @@ func (x *GetServerInfoResponse) String() string {
 func (*GetServerInfoResponse) ProtoMessage() {}
 
 func (x *GetServerInfoResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[28]
+	mi := &file_kubling_v1_command_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2023,7 +1352,7 @@ func (x *GetServerInfoResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetServerInfoResponse.ProtoReflect.Descriptor instead.
 func (*GetServerInfoResponse) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{28}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *GetServerInfoResponse) GetServerVersion() string {
@@ -2045,7 +1374,7 @@ var File_kubling_v1_command_proto protoreflect.FileDescriptor
 const file_kubling_v1_command_proto_rawDesc = "" +
 	"\n" +
 	"\x18kubling/v1/command.proto\x12\n" +
-	"kubling.v1\"\xb6\x02\n" +
+	"kubling.v1\x1a\x16kubling/v1/value.proto\"\xb6\x02\n" +
 	"\fLoginRequest\x12\x19\n" +
 	"\bvdb_name\x18\x01 \x01(\tR\avdbName\x12\x1f\n" +
 	"\vvdb_version\x18\x02 \x01(\tR\n" +
@@ -2091,48 +1420,7 @@ const file_kubling_v1_command_proto_rawDesc = "" +
 	"\n" +
 	"session_id\x18\x02 \x01(\tR\tsessionId\"+\n" +
 	"\x13SessionPingResponse\x12\x14\n" +
-	"\x05valid\x18\x01 \x01(\bR\x05valid\"\v\n" +
-	"\tNullValue\"\xfe\x06\n" +
-	"\x05Value\x126\n" +
-	"\n" +
-	"null_value\x18\x01 \x01(\v2\x15.kubling.v1.NullValueH\x00R\tnullValue\x12#\n" +
-	"\fstring_value\x18\x02 \x01(\tH\x00R\vstringValue\x12)\n" +
-	"\x0fvarbinary_value\x18\x03 \x01(\fH\x00R\x0evarbinaryValue\x12\x1f\n" +
-	"\n" +
-	"char_value\x18\x04 \x01(\tH\x00R\tcharValue\x12%\n" +
-	"\rboolean_value\x18\x05 \x01(\bH\x00R\fbooleanValue\x12\x1f\n" +
-	"\n" +
-	"byte_value\x18\x06 \x01(\x05H\x00R\tbyteValue\x12!\n" +
-	"\vshort_value\x18\a \x01(\x05H\x00R\n" +
-	"shortValue\x12%\n" +
-	"\rinteger_value\x18\b \x01(\x05H\x00R\fintegerValue\x12\x1f\n" +
-	"\n" +
-	"long_value\x18\t \x01(\x03H\x00R\tlongValue\x12+\n" +
-	"\x10biginteger_value\x18\n" +
-	" \x01(\tH\x00R\x0fbigintegerValue\x12!\n" +
-	"\vfloat_value\x18\v \x01(\x02H\x00R\n" +
-	"floatValue\x12#\n" +
-	"\fdouble_value\x18\f \x01(\x01H\x00R\vdoubleValue\x12+\n" +
-	"\x10bigdecimal_value\x18\r \x01(\tH\x00R\x0fbigdecimalValue\x12\x1f\n" +
-	"\n" +
-	"date_value\x18\x0e \x01(\tH\x00R\tdateValue\x12\x1f\n" +
-	"\n" +
-	"time_value\x18\x0f \x01(\tH\x00R\ttimeValue\x12)\n" +
-	"\x0ftimestamp_value\x18\x10 \x01(\tH\x00R\x0etimestampValue\x126\n" +
-	"\n" +
-	"blob_value\x18\x11 \x01(\v2\x15.kubling.v1.BlobValueH\x00R\tblobValue\x126\n" +
-	"\n" +
-	"clob_value\x18\x12 \x01(\v2\x15.kubling.v1.ClobValueH\x00R\tclobValue\x12\x1d\n" +
-	"\txml_value\x18\x13 \x01(\tH\x00R\bxmlValue\x12'\n" +
-	"\x0egeometry_value\x18\x14 \x01(\fH\x00R\rgeometryValue\x12)\n" +
-	"\x0fgeography_value\x18\x15 \x01(\fH\x00R\x0egeographyValue\x12\x1f\n" +
-	"\n" +
-	"json_value\x18\x16 \x01(\tH\x00R\tjsonValueB\x06\n" +
-	"\x04kind\"\x1f\n" +
-	"\tBlobValue\x12\x12\n" +
-	"\x04data\x18\x01 \x01(\fR\x04data\"\x1f\n" +
-	"\tClobValue\x12\x12\n" +
-	"\x04data\x18\x01 \x01(\tR\x04data\"4\n" +
+	"\x05valid\x18\x01 \x01(\bR\x05valid\"4\n" +
 	"\tParameter\x12'\n" +
 	"\x05value\x18\x01 \x01(\v2\x11.kubling.v1.ValueR\x05value\"\xa7\x01\n" +
 	"\vExecRequest\x12%\n" +
@@ -2183,31 +1471,7 @@ const file_kubling_v1_command_proto_rawDesc = "" +
 	"\x14GetServerInfoRequest\"Z\n" +
 	"\x15GetServerInfoResponse\x12%\n" +
 	"\x0eserver_version\x18\x01 \x01(\tR\rserverVersion\x12\x1a\n" +
-	"\bfeatures\x18\x02 \x03(\tR\bfeatures*\x86\x04\n" +
-	"\tValueType\x12\x16\n" +
-	"\x12VALUE_TYPE_UNKNOWN\x10\x00\x12\x15\n" +
-	"\x11VALUE_TYPE_STRING\x10\x01\x12\x18\n" +
-	"\x14VALUE_TYPE_VARBINARY\x10\x02\x12\x13\n" +
-	"\x0fVALUE_TYPE_CHAR\x10\x03\x12\x16\n" +
-	"\x12VALUE_TYPE_BOOLEAN\x10\x04\x12\x13\n" +
-	"\x0fVALUE_TYPE_BYTE\x10\x05\x12\x14\n" +
-	"\x10VALUE_TYPE_SHORT\x10\x06\x12\x16\n" +
-	"\x12VALUE_TYPE_INTEGER\x10\a\x12\x13\n" +
-	"\x0fVALUE_TYPE_LONG\x10\b\x12\x19\n" +
-	"\x15VALUE_TYPE_BIGINTEGER\x10\t\x12\x14\n" +
-	"\x10VALUE_TYPE_FLOAT\x10\n" +
-	"\x12\x15\n" +
-	"\x11VALUE_TYPE_DOUBLE\x10\v\x12\x19\n" +
-	"\x15VALUE_TYPE_BIGDECIMAL\x10\f\x12\x13\n" +
-	"\x0fVALUE_TYPE_DATE\x10\r\x12\x13\n" +
-	"\x0fVALUE_TYPE_TIME\x10\x0e\x12\x18\n" +
-	"\x14VALUE_TYPE_TIMESTAMP\x10\x0f\x12\x13\n" +
-	"\x0fVALUE_TYPE_BLOB\x10\x10\x12\x13\n" +
-	"\x0fVALUE_TYPE_CLOB\x10\x11\x12\x17\n" +
-	"\x13VALUE_TYPE_GEOMETRY\x10\x12\x12\x18\n" +
-	"\x14VALUE_TYPE_GEOGRAPHY\x10\x13\x12\x13\n" +
-	"\x0fVALUE_TYPE_JSON\x10\x14\x12\x12\n" +
-	"\x0eVALUE_TYPE_XML\x10\x152\x9a\x02\n" +
+	"\bfeatures\x18\x02 \x03(\tR\bfeatures2\x9a\x02\n" +
 	"\x0eSessionService\x12<\n" +
 	"\x05Login\x12\x18.kubling.v1.LoginRequest\x1a\x19.kubling.v1.LoginResponse\x12?\n" +
 	"\x06Logout\x12\x19.kubling.v1.LogoutRequest\x1a\x1a.kubling.v1.LogoutResponse\x129\n" +
@@ -2221,7 +1485,7 @@ const file_kubling_v1_command_proto_rawDesc = "" +
 	"\x13RollbackTransaction\x12&.kubling.v1.RollbackTransactionRequest\x1a'.kubling.v1.RollbackTransactionResponse\x12Z\n" +
 	"\x0fIsInTransaction\x12\".kubling.v1.IsInTransactionRequest\x1a#.kubling.v1.IsInTransactionResponse\x12T\n" +
 	"\rGetServerInfo\x12 .kubling.v1.GetServerInfoRequest\x1a!.kubling.v1.GetServerInfoResponseBw\n" +
-	"\x1acom.kubling.transport.grpcB\fCommandProtoP\x01ZIgithub.com/kubling-community/kubling-grpc/sdk-go/gen/kubling/v1;kublingv1b\x06proto3"
+	"\x1acom.kubling.transport.grpcB\fCommandProtoP\x01ZIgithub.com/kubling-community/kubling-grpc/sdk-go/gen/kubling/v1;kublingv1P\x00b\x06proto3"
 
 var (
 	file_kubling_v1_command_proto_rawDescOnce sync.Once
@@ -2235,82 +1499,74 @@ func file_kubling_v1_command_proto_rawDescGZIP() []byte {
 	return file_kubling_v1_command_proto_rawDescData
 }
 
-var file_kubling_v1_command_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_kubling_v1_command_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
+var file_kubling_v1_command_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
 var file_kubling_v1_command_proto_goTypes = []any{
-	(ValueType)(0),                      // 0: kubling.v1.ValueType
-	(*LoginRequest)(nil),                // 1: kubling.v1.LoginRequest
-	(*LoginResponse)(nil),               // 2: kubling.v1.LoginResponse
-	(*LogoutRequest)(nil),               // 3: kubling.v1.LogoutRequest
-	(*LogoutResponse)(nil),              // 4: kubling.v1.LogoutResponse
-	(*PingRequest)(nil),                 // 5: kubling.v1.PingRequest
-	(*PingResponse)(nil),                // 6: kubling.v1.PingResponse
-	(*SessionPingRequest)(nil),          // 7: kubling.v1.SessionPingRequest
-	(*SessionPingResponse)(nil),         // 8: kubling.v1.SessionPingResponse
-	(*NullValue)(nil),                   // 9: kubling.v1.NullValue
-	(*Value)(nil),                       // 10: kubling.v1.Value
-	(*BlobValue)(nil),                   // 11: kubling.v1.BlobValue
-	(*ClobValue)(nil),                   // 12: kubling.v1.ClobValue
-	(*Parameter)(nil),                   // 13: kubling.v1.Parameter
-	(*ExecRequest)(nil),                 // 14: kubling.v1.ExecRequest
-	(*ExecResponse)(nil),                // 15: kubling.v1.ExecResponse
-	(*QueryRequest)(nil),                // 16: kubling.v1.QueryRequest
-	(*Column)(nil),                      // 17: kubling.v1.Column
-	(*Row)(nil),                         // 18: kubling.v1.Row
-	(*QueryBatch)(nil),                  // 19: kubling.v1.QueryBatch
-	(*BeginTransactionRequest)(nil),     // 20: kubling.v1.BeginTransactionRequest
-	(*BeginTransactionResponse)(nil),    // 21: kubling.v1.BeginTransactionResponse
-	(*CommitTransactionRequest)(nil),    // 22: kubling.v1.CommitTransactionRequest
-	(*CommitTransactionResponse)(nil),   // 23: kubling.v1.CommitTransactionResponse
-	(*RollbackTransactionRequest)(nil),  // 24: kubling.v1.RollbackTransactionRequest
-	(*RollbackTransactionResponse)(nil), // 25: kubling.v1.RollbackTransactionResponse
-	(*IsInTransactionRequest)(nil),      // 26: kubling.v1.IsInTransactionRequest
-	(*IsInTransactionResponse)(nil),     // 27: kubling.v1.IsInTransactionResponse
-	(*GetServerInfoRequest)(nil),        // 28: kubling.v1.GetServerInfoRequest
-	(*GetServerInfoResponse)(nil),       // 29: kubling.v1.GetServerInfoResponse
-	nil,                                 // 30: kubling.v1.LoginRequest.PropertiesEntry
-	nil,                                 // 31: kubling.v1.LoginResponse.PropertiesEntry
+	(*LoginRequest)(nil),                // 0: kubling.v1.LoginRequest
+	(*LoginResponse)(nil),               // 1: kubling.v1.LoginResponse
+	(*LogoutRequest)(nil),               // 2: kubling.v1.LogoutRequest
+	(*LogoutResponse)(nil),              // 3: kubling.v1.LogoutResponse
+	(*PingRequest)(nil),                 // 4: kubling.v1.PingRequest
+	(*PingResponse)(nil),                // 5: kubling.v1.PingResponse
+	(*SessionPingRequest)(nil),          // 6: kubling.v1.SessionPingRequest
+	(*SessionPingResponse)(nil),         // 7: kubling.v1.SessionPingResponse
+	(*Parameter)(nil),                   // 8: kubling.v1.Parameter
+	(*ExecRequest)(nil),                 // 9: kubling.v1.ExecRequest
+	(*ExecResponse)(nil),                // 10: kubling.v1.ExecResponse
+	(*QueryRequest)(nil),                // 11: kubling.v1.QueryRequest
+	(*Column)(nil),                      // 12: kubling.v1.Column
+	(*Row)(nil),                         // 13: kubling.v1.Row
+	(*QueryBatch)(nil),                  // 14: kubling.v1.QueryBatch
+	(*BeginTransactionRequest)(nil),     // 15: kubling.v1.BeginTransactionRequest
+	(*BeginTransactionResponse)(nil),    // 16: kubling.v1.BeginTransactionResponse
+	(*CommitTransactionRequest)(nil),    // 17: kubling.v1.CommitTransactionRequest
+	(*CommitTransactionResponse)(nil),   // 18: kubling.v1.CommitTransactionResponse
+	(*RollbackTransactionRequest)(nil),  // 19: kubling.v1.RollbackTransactionRequest
+	(*RollbackTransactionResponse)(nil), // 20: kubling.v1.RollbackTransactionResponse
+	(*IsInTransactionRequest)(nil),      // 21: kubling.v1.IsInTransactionRequest
+	(*IsInTransactionResponse)(nil),     // 22: kubling.v1.IsInTransactionResponse
+	(*GetServerInfoRequest)(nil),        // 23: kubling.v1.GetServerInfoRequest
+	(*GetServerInfoResponse)(nil),       // 24: kubling.v1.GetServerInfoResponse
+	nil,                                 // 25: kubling.v1.LoginRequest.PropertiesEntry
+	nil,                                 // 26: kubling.v1.LoginResponse.PropertiesEntry
+	(*Value)(nil),                       // 27: kubling.v1.Value
 }
 var file_kubling_v1_command_proto_depIdxs = []int32{
-	30, // 0: kubling.v1.LoginRequest.properties:type_name -> kubling.v1.LoginRequest.PropertiesEntry
-	31, // 1: kubling.v1.LoginResponse.properties:type_name -> kubling.v1.LoginResponse.PropertiesEntry
-	9,  // 2: kubling.v1.Value.null_value:type_name -> kubling.v1.NullValue
-	11, // 3: kubling.v1.Value.blob_value:type_name -> kubling.v1.BlobValue
-	12, // 4: kubling.v1.Value.clob_value:type_name -> kubling.v1.ClobValue
-	10, // 5: kubling.v1.Parameter.value:type_name -> kubling.v1.Value
-	13, // 6: kubling.v1.ExecRequest.params:type_name -> kubling.v1.Parameter
-	19, // 7: kubling.v1.ExecResponse.generated_keys:type_name -> kubling.v1.QueryBatch
-	13, // 8: kubling.v1.QueryRequest.params:type_name -> kubling.v1.Parameter
-	10, // 9: kubling.v1.Row.values:type_name -> kubling.v1.Value
-	17, // 10: kubling.v1.QueryBatch.columns:type_name -> kubling.v1.Column
-	18, // 11: kubling.v1.QueryBatch.rows:type_name -> kubling.v1.Row
-	1,  // 12: kubling.v1.SessionService.Login:input_type -> kubling.v1.LoginRequest
-	3,  // 13: kubling.v1.SessionService.Logout:input_type -> kubling.v1.LogoutRequest
-	5,  // 14: kubling.v1.SessionService.Ping:input_type -> kubling.v1.PingRequest
-	7,  // 15: kubling.v1.SessionService.PingSession:input_type -> kubling.v1.SessionPingRequest
-	14, // 16: kubling.v1.QueryService.Exec:input_type -> kubling.v1.ExecRequest
-	16, // 17: kubling.v1.QueryService.Query:input_type -> kubling.v1.QueryRequest
-	20, // 18: kubling.v1.QueryService.BeginTransaction:input_type -> kubling.v1.BeginTransactionRequest
-	22, // 19: kubling.v1.QueryService.CommitTransaction:input_type -> kubling.v1.CommitTransactionRequest
-	24, // 20: kubling.v1.QueryService.RollbackTransaction:input_type -> kubling.v1.RollbackTransactionRequest
-	26, // 21: kubling.v1.QueryService.IsInTransaction:input_type -> kubling.v1.IsInTransactionRequest
-	28, // 22: kubling.v1.QueryService.GetServerInfo:input_type -> kubling.v1.GetServerInfoRequest
-	2,  // 23: kubling.v1.SessionService.Login:output_type -> kubling.v1.LoginResponse
-	4,  // 24: kubling.v1.SessionService.Logout:output_type -> kubling.v1.LogoutResponse
-	6,  // 25: kubling.v1.SessionService.Ping:output_type -> kubling.v1.PingResponse
-	8,  // 26: kubling.v1.SessionService.PingSession:output_type -> kubling.v1.SessionPingResponse
-	15, // 27: kubling.v1.QueryService.Exec:output_type -> kubling.v1.ExecResponse
-	19, // 28: kubling.v1.QueryService.Query:output_type -> kubling.v1.QueryBatch
-	21, // 29: kubling.v1.QueryService.BeginTransaction:output_type -> kubling.v1.BeginTransactionResponse
-	23, // 30: kubling.v1.QueryService.CommitTransaction:output_type -> kubling.v1.CommitTransactionResponse
-	25, // 31: kubling.v1.QueryService.RollbackTransaction:output_type -> kubling.v1.RollbackTransactionResponse
-	27, // 32: kubling.v1.QueryService.IsInTransaction:output_type -> kubling.v1.IsInTransactionResponse
-	29, // 33: kubling.v1.QueryService.GetServerInfo:output_type -> kubling.v1.GetServerInfoResponse
-	23, // [23:34] is the sub-list for method output_type
-	12, // [12:23] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	25, // 0: kubling.v1.LoginRequest.properties:type_name -> kubling.v1.LoginRequest.PropertiesEntry
+	26, // 1: kubling.v1.LoginResponse.properties:type_name -> kubling.v1.LoginResponse.PropertiesEntry
+	27, // 2: kubling.v1.Parameter.value:type_name -> kubling.v1.Value
+	8,  // 3: kubling.v1.ExecRequest.params:type_name -> kubling.v1.Parameter
+	14, // 4: kubling.v1.ExecResponse.generated_keys:type_name -> kubling.v1.QueryBatch
+	8,  // 5: kubling.v1.QueryRequest.params:type_name -> kubling.v1.Parameter
+	27, // 6: kubling.v1.Row.values:type_name -> kubling.v1.Value
+	12, // 7: kubling.v1.QueryBatch.columns:type_name -> kubling.v1.Column
+	13, // 8: kubling.v1.QueryBatch.rows:type_name -> kubling.v1.Row
+	0,  // 9: kubling.v1.SessionService.Login:input_type -> kubling.v1.LoginRequest
+	2,  // 10: kubling.v1.SessionService.Logout:input_type -> kubling.v1.LogoutRequest
+	4,  // 11: kubling.v1.SessionService.Ping:input_type -> kubling.v1.PingRequest
+	6,  // 12: kubling.v1.SessionService.PingSession:input_type -> kubling.v1.SessionPingRequest
+	9,  // 13: kubling.v1.QueryService.Exec:input_type -> kubling.v1.ExecRequest
+	11, // 14: kubling.v1.QueryService.Query:input_type -> kubling.v1.QueryRequest
+	15, // 15: kubling.v1.QueryService.BeginTransaction:input_type -> kubling.v1.BeginTransactionRequest
+	17, // 16: kubling.v1.QueryService.CommitTransaction:input_type -> kubling.v1.CommitTransactionRequest
+	19, // 17: kubling.v1.QueryService.RollbackTransaction:input_type -> kubling.v1.RollbackTransactionRequest
+	21, // 18: kubling.v1.QueryService.IsInTransaction:input_type -> kubling.v1.IsInTransactionRequest
+	23, // 19: kubling.v1.QueryService.GetServerInfo:input_type -> kubling.v1.GetServerInfoRequest
+	1,  // 20: kubling.v1.SessionService.Login:output_type -> kubling.v1.LoginResponse
+	3,  // 21: kubling.v1.SessionService.Logout:output_type -> kubling.v1.LogoutResponse
+	5,  // 22: kubling.v1.SessionService.Ping:output_type -> kubling.v1.PingResponse
+	7,  // 23: kubling.v1.SessionService.PingSession:output_type -> kubling.v1.SessionPingResponse
+	10, // 24: kubling.v1.QueryService.Exec:output_type -> kubling.v1.ExecResponse
+	14, // 25: kubling.v1.QueryService.Query:output_type -> kubling.v1.QueryBatch
+	16, // 26: kubling.v1.QueryService.BeginTransaction:output_type -> kubling.v1.BeginTransactionResponse
+	18, // 27: kubling.v1.QueryService.CommitTransaction:output_type -> kubling.v1.CommitTransactionResponse
+	20, // 28: kubling.v1.QueryService.RollbackTransaction:output_type -> kubling.v1.RollbackTransactionResponse
+	22, // 29: kubling.v1.QueryService.IsInTransaction:output_type -> kubling.v1.IsInTransactionResponse
+	24, // 30: kubling.v1.QueryService.GetServerInfo:output_type -> kubling.v1.GetServerInfoResponse
+	20, // [20:31] is the sub-list for method output_type
+	9,  // [9:20] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_kubling_v1_command_proto_init() }
@@ -2318,44 +1574,20 @@ func file_kubling_v1_command_proto_init() {
 	if File_kubling_v1_command_proto != nil {
 		return
 	}
-	file_kubling_v1_command_proto_msgTypes[9].OneofWrappers = []any{
-		(*Value_NullValue)(nil),
-		(*Value_StringValue)(nil),
-		(*Value_VarbinaryValue)(nil),
-		(*Value_CharValue)(nil),
-		(*Value_BooleanValue)(nil),
-		(*Value_ByteValue)(nil),
-		(*Value_ShortValue)(nil),
-		(*Value_IntegerValue)(nil),
-		(*Value_LongValue)(nil),
-		(*Value_BigintegerValue)(nil),
-		(*Value_FloatValue)(nil),
-		(*Value_DoubleValue)(nil),
-		(*Value_BigdecimalValue)(nil),
-		(*Value_DateValue)(nil),
-		(*Value_TimeValue)(nil),
-		(*Value_TimestampValue)(nil),
-		(*Value_BlobValue)(nil),
-		(*Value_ClobValue)(nil),
-		(*Value_XmlValue)(nil),
-		(*Value_GeometryValue)(nil),
-		(*Value_GeographyValue)(nil),
-		(*Value_JsonValue)(nil),
-	}
-	file_kubling_v1_command_proto_msgTypes[14].OneofWrappers = []any{}
+	file_kubling_v1_value_proto_init()
+	file_kubling_v1_command_proto_msgTypes[10].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_kubling_v1_command_proto_rawDesc), len(file_kubling_v1_command_proto_rawDesc)),
-			NumEnums:      1,
-			NumMessages:   31,
+			NumEnums:      0,
+			NumMessages:   27,
 			NumExtensions: 0,
 			NumServices:   2,
 		},
 		GoTypes:           file_kubling_v1_command_proto_goTypes,
 		DependencyIndexes: file_kubling_v1_command_proto_depIdxs,
-		EnumInfos:         file_kubling_v1_command_proto_enumTypes,
 		MessageInfos:      file_kubling_v1_command_proto_msgTypes,
 	}.Build()
 	File_kubling_v1_command_proto = out.File

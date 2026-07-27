@@ -1,0 +1,33 @@
+name: Protobuf
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'proto/**'
+      - 'buf.yaml'
+      - 'buf.lock'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'proto/**'
+      - 'buf.yaml'
+      - 'buf.lock'
+
+permissions:
+  contents: read
+
+jobs:
+  buf:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Validate and publish protobuf module
+        uses: bufbuild/buf-action@v1
+        with:
+          token: ${{ secrets.BUF_TOKEN }}
