@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package kubling.v1;
 
-option go_package = "github.com/kubling-community/kubling-grpc/sdk-go/gen/kubling/v1;kublingv1";
+option go_package = "github.com/kubling-community/kubling-grpc/sdk-go/kubling/v1;kublingv1";
 option java_multiple_files = true;
 option java_outer_classname = "ValueProto";
 option java_package = "com.kubling.transport.grpc";

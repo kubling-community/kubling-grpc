@@ -6,7 +6,7 @@ package kubling.v1;
 // buf:lint:ignore IMPORT_NO_PUBLIC
 import public "kubling/v1/value.proto";
 
-option go_package = "github.com/kubling-community/kubling-grpc/sdk-go/gen/kubling/v1;kublingv1";
+option go_package = "github.com/kubling-community/kubling-grpc/sdk-go/kubling/v1;kublingv1";
 option java_multiple_files = true;
 option java_outer_classname = "CommandProto";
 option java_package = "com.kubling.transport.grpc";
