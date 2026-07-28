@@ -766,9 +766,9 @@ const file_kubling_v1_value_proto_rawDesc = "" +
 	"\x13VALUE_TYPE_GEOMETRY\x10\x12\x12\x18\n" +
 	"\x14VALUE_TYPE_GEOGRAPHY\x10\x13\x12\x13\n" +
 	"\x0fVALUE_TYPE_JSON\x10\x14\x12\x12\n" +
-	"\x0eVALUE_TYPE_XML\x10\x15Bu\n" +
+	"\x0eVALUE_TYPE_XML\x10\x15Bq\n" +
 	"\x1acom.kubling.transport.grpcB\n" +
-	"ValueProtoP\x01ZIgithub.com/kubling-community/kubling-grpc/sdk-go/gen/kubling/v1;kublingv1b\x06proto3"
+	"ValueProtoP\x01ZEgithub.com/kubling-community/kubling-grpc/sdk-go/kubling/v1;kublingv1b\x06proto3"
 
 var (
 	file_kubling_v1_value_proto_rawDescOnce sync.Once

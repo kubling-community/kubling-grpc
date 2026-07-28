@@ -1485,8 +1485,8 @@ const file_kubling_v1_command_proto_rawDesc = "" +
 	"\x11CommitTransaction\x12$.kubling.v1.CommitTransactionRequest\x1a%.kubling.v1.CommitTransactionResponse\x12f\n" +
 	"\x13RollbackTransaction\x12&.kubling.v1.RollbackTransactionRequest\x1a'.kubling.v1.RollbackTransactionResponse\x12Z\n" +
 	"\x0fIsInTransaction\x12\".kubling.v1.IsInTransactionRequest\x1a#.kubling.v1.IsInTransactionResponse\x12T\n" +
-	"\rGetServerInfo\x12 .kubling.v1.GetServerInfoRequest\x1a!.kubling.v1.GetServerInfoResponseBw\n" +
-	"\x1acom.kubling.transport.grpcB\fCommandProtoP\x01ZIgithub.com/kubling-community/kubling-grpc/sdk-go/gen/kubling/v1;kublingv1P\x00b\x06proto3"
+	"\rGetServerInfo\x12 .kubling.v1.GetServerInfoRequest\x1a!.kubling.v1.GetServerInfoResponseBs\n" +
+	"\x1acom.kubling.transport.grpcB\fCommandProtoP\x01ZEgithub.com/kubling-community/kubling-grpc/sdk-go/kubling/v1;kublingv1P\x00b\x06proto3"
 
 var (
 	file_kubling_v1_command_proto_rawDescOnce sync.Once

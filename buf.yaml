@@ -10,4 +10,7 @@ lint:
 
 breaking:
   use:
-    - PACKAGE
+    - FILE
+  ignore_only:
+    FILE_SAME_GO_PACKAGE:
+      - proto/kubling/v1
