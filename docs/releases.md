@@ -1,4 +1,4 @@
-# Java and Python releases
+# Protocol, Java and Python releases
 
 Java and Python are generated client bindings with shared feature constants.
 They expose the protocol; they do not implement a higher-level SQL API or imply
@@ -25,6 +25,20 @@ Buf plugins; Java and Python outputs are cleaned before generation. Java's
 Maven `generate-sources` phase and Python's PEP 517 backend invoke this pipeline.
 Python sdists include generated sources and build without external generators.
 Java/Python installations from registries require neither Buf nor protoc.
+
+## Protocol releases
+
+The canonical module is `buf.build/kubling/kubling-grpc`. Pushes to `main` that
+change the schema update its `main` label. Versioned releases are run manually
+from the main branch and publish both `main` and a versioned BSR label
+`vMAJOR.MINOR.PATCH`; the matching immutable Git tag is
+`proto/vMAJOR.MINOR.PATCH`. The workflow rejects reuse of that tag. Package and
+SDK versions remain independent.
+
+Before publishing, the workflow builds and lints the module and checks it for
+breaking changes against the currently published `main` label. For protocol
+1.1, run **Protobuf** with version `v1.1.0`, then verify both BSR labels resolve
+to the merge commit and that `proto/v1.1.0` points to the same source commit.
 
 | Package | Coordinates | Runtime floor |
 |---|---|---|
