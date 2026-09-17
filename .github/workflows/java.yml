@@ -37,6 +37,8 @@ jobs:
           fetch-depth: 0
       - id: source
         run: echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Validate coordinated version
+        run: python3 tools/check_release.py all
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
@@ -56,6 +58,7 @@ jobs:
           python3 tools/check_release.py java "$RELEASE_TAG"
           test "$(git rev-parse HEAD)" = "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")"
           git merge-base --is-ancestor HEAD origin/main
+          python3 tools/check_release.py train HEAD
       - name: Check contract
         run: |
           bash tools/bootstrap.sh
@@ -103,6 +106,7 @@ jobs:
           python3 tools/check_release.py java "$RELEASE_TAG"
           test "$(git rev-parse HEAD)" = "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")"
           git merge-base --is-ancestor HEAD origin/main
+          python3 tools/check_release.py train HEAD
       - name: Build, sign and publish to Maven Central
         env:
           MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}

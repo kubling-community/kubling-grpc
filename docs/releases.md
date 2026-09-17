@@ -57,12 +57,13 @@ checks whenever generators change.
 ## CI and local validation
 
 Pull requests and pushes to main regenerate, build and test the Go SDK and build
-the Java/Python packages without publishing. A Go SDK tag validates that it is a
-semantic version on main, repeats generation and tests, and creates the GitHub
-release. Java compiles and runs tests with Oracle GraalVM 25 and produces Java 21
-bytecode, following Kubling Core. CI checks both the build JDK and effective
-Maven compiler release, then inspects the packaged class versions. The Maven
-Wrapper also matches Core's Maven 3.9.0 / Wrapper 3.2.0. Python builds
+the Java/Python packages without publishing. Every workflow validates the root
+`VERSION` against the Java and Python manifests. Release tags also require all
+four coordinated tags to point to the same commit on main. Java compiles and
+runs tests with Oracle GraalVM 25 and produces Java 21 bytecode, following
+Kubling Core. CI checks both the build JDK and effective Maven compiler release,
+then inspects the packaged class versions. The Maven Wrapper also matches Core's
+Maven 3.9.0 / Wrapper 3.2.0. Python builds
 an sdist and then a wheel from that sdist, and installs/tests both distributions
 outside the source tree on Python 3.10 and 3.14. Neither workflow needs publishing
 credentials during validation. Both check the contract against `sdk-go/v0.1.1`.
@@ -127,32 +128,33 @@ token permissions are exercised during publication.
 
 ## Publish an approved version
 
-1. Choose one `X.Y.Z` for the complete release train. Set that version in
-   `sdk-java/pom.xml` and `sdk-python/pyproject.toml` and update public examples.
-2. Run generation, contract checks and every SDK build/test. Merge the exact
-   release commit to `main` only after all checks pass.
-3. Publish BSR `vX.Y.Z` and create `proto/vX.Y.Z` from the release commit.
-4. Create annotated `sdk-go/vX.Y.Z`, `sdk-java/vX.Y.Z` and
-   `sdk-python/vX.Y.Z` tags on that same commit.
-5. Let the Go tag workflow validate and create its GitHub Release. Verify the
-   module resolves through the public Go proxy, for example:
+1. Choose one `X.Y.Z` for the complete release train. Put it in `VERSION`, the
+   Java POM, the Python project metadata and public examples.
+2. Merge the release commit to `main` only after the ordinary Go, Java and Python
+   workflows pass.
+3. Run **Release train** from `main` with the exact `X.Y.Z` and `publish=false`.
+   This is a complete dry run and creates no tags or registry artifacts.
+4. After reviewing that run, rerun **Release train** with the same version and
+   `publish=true`. It publishes BSR, atomically creates all four tags, publishes
+   Maven and PyPI, verifies the public registries and creates one coordinated
+   GitHub Release on `proto/vX.Y.Z`.
+5. Confirm the Go module independently through the public proxy, for example:
 
    ```sh
    GOPROXY=https://proxy.golang.org go list -m \
      github.com/kubling-community/kubling-grpc/sdk-go@v1.1.1
    ```
 
-6. Run **Java client** and **Python client** with their existing matching tags.
-   Leave `publish` false first for a complete dry validation, then rerun each
-   with `publish` true.
-7. Verify BSR, the public Go proxy, Maven Central and PyPI independently. Announce
-   the train only after every required artifact resolves at `X.Y.Z`.
+6. Verify BSR, Maven Central and PyPI independently. Announce the train only
+   after every required artifact resolves at `X.Y.Z`.
 
 The Java publish job regenerates, tests, packages and signs the tagged sources
 before deployment. Python uploads the exact distributions from the tested build
-job. A failed or partly completed publication must be checked in the registry
-before rerunning. The coordinated train remains incomplete until all artifacts
-are verified; versions and tags must never be replaced or silently skipped.
+job. The language-specific manual workflows remain available to recover a
+missing Java or Python publication after a partial train. A failed or partly
+completed publication must be checked in every registry before recovery. The
+train remains incomplete until all artifacts are verified; versions and tags
+must never be replaced or silently skipped.
 
 References: [gRPC Java generation](https://github.com/grpc/grpc-java#generated-code),
 [Central requirements](https://central.sonatype.org/publish/requirements/),
