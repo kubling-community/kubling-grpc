@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.kubling</groupId>
   <artifactId>kubling-grpc</artifactId>
-  <version>0.1.0</version>
+  <version>1.1.1</version>
   <name>Kubling gRPC Java client</name>
   <description>Official generated Java bindings and feature constants for the Kubling gRPC protocol.</description>
   <url>https://github.com/kubling-community/kubling-grpc</url>

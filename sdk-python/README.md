@@ -5,11 +5,11 @@ Kubling protocol. Requires Python 3.10 or later. This package defines no DB-API,
 ORM or framework adapter behavior. Server support must be discovered through
 capabilities before using optional protocol features.
 
-Distribution name: `kubling-grpc`. The initial package version is `0.1.0`;
-availability depends on a completed release to PyPI.
+Distribution name: `kubling-grpc`. Official releases share the canonical
+repository version; availability depends on a completed release to PyPI.
 
 ```sh
-pip install kubling-grpc
+pip install kubling-grpc==1.1.1
 ```
 
 ```python
