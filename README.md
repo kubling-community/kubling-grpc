@@ -36,6 +36,8 @@ Any language supporting Protocol Buffers can generate client stubs directly from
 The additive protocol 1.1 is described in [the client contract](docs/client-contract-v1.md),
 with [compatibility rules](docs/compatibility.md) and [acceptance cases](docs/acceptance.md).
 Generated definitions do not imply server support: clients must verify capabilities.
+Released schemas are available from
+[`buf.build/kubling/kubling-grpc`](https://buf.build/kubling/kubling-grpc).
 
 ## Official SDKs
 
@@ -83,6 +85,10 @@ use `--language go` (or `rust`, `java`, `python`) to check just one language.
 The registry also defines request activation and output acceptance. Portable
 semantic cases are in [protocol/conformance](protocol/conformance/README.md);
 run their reference checks with `python3 -B -m unittest discover -s tools/tests -v`.
+
+Protocol releases use BSR labels such as `v1.1.0` and matching immutable Git
+tags such as `proto/v1.1.0`. Package and SDK versions have independent release
+cycles.
 
 ## License
 
