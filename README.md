@@ -86,9 +86,9 @@ The registry also defines request activation and output acceptance. Portable
 semantic cases are in [protocol/conformance](protocol/conformance/README.md);
 run their reference checks with `python3 -B -m unittest discover -s tools/tests -v`.
 
-Protocol releases use BSR labels such as `v1.1.0` and matching immutable Git
-tags such as `proto/v1.1.0`. Package and SDK versions have independent release
-cycles.
+Protocol and official SDK releases use one shared version. For `X.Y.Z`, BSR and
+the `proto/`, `sdk-go/`, `sdk-java/` and `sdk-python/` tags all use `vX.Y.Z` and
+come from the same source commit. See the [versioning policy](docs/versioning.md).
 
 ## License
 
