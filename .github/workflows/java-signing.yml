@@ -27,6 +27,8 @@ jobs:
           cache: maven
       - name: Verify build JDK and target release
         run: bash tools/check_java_build.sh
+      - name: Validate coordinated version
+        run: python3 tools/check_release.py all
       - name: Build, test and sign without deployment
         env:
           MAVEN_GPG_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}

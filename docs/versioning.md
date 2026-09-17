@@ -16,8 +16,8 @@ release train publishes all of the following from one source commit:
 | Artifact | Public version or tag |
 |---|---|
 | Buf Schema Registry module | `buf.build/kubling/kubling-grpc:vX.Y.Z` |
-| Protocol Git tag | `proto/vX.Y.Z` |
-| Go module and GitHub Release | `sdk-go/vX.Y.Z` |
+| Protocol Git tag and coordinated GitHub Release | `proto/vX.Y.Z` |
+| Go module and Git tag | `sdk-go/vX.Y.Z` |
 | Java package and GitHub tag | `com.kubling:kubling-grpc:X.Y.Z`, `sdk-java/vX.Y.Z` |
 | Python package and GitHub tag | `kubling-grpc==X.Y.Z`, `sdk-python/vX.Y.Z` |
 
@@ -77,19 +77,21 @@ rules in the client contract.
    and every public installation example to that value.
 2. Regenerate all supported SDKs from `proto/` and
    `protocol/features.json`. Commit required generated outputs.
-3. Run protocol compatibility checks, feature/conformance tests, every SDK build
+3. Run the ordinary pull-request checks and merge the release commit to `main`.
+   Do not create release tags from a branch or from different commits.
+4. Run the **Release train** workflow from `main` with publication disabled. It
+   runs protocol compatibility checks, feature/conformance tests, every SDK build
    and every SDK test against the exact release commit.
-4. Merge the release commit to `main`. Do not create release tags from a branch
-   or from different commits.
-5. Create the BSR label and the `proto/`, `sdk-go/`, `sdk-java/` and
-   `sdk-python/` tags with the same `vX.Y.Z` suffix.
-6. Publish the Go release, Maven package and PyPI package from those tags. The
-   artifacts must be the outputs validated in step 3.
+5. After reviewing the dry run, run **Release train** again with publication
+   enabled. It creates the BSR label and atomically pushes the `proto/`,
+   `sdk-go/`, `sdk-java/` and `sdk-python/` tags with the same `vX.Y.Z` suffix.
+6. The same run publishes the Maven and PyPI packages from the validated commit;
+   the Go module becomes available from its tag.
 7. Verify every registry independently: resolve the BSR label, download the Go
    module through the public proxy, consume the Java package from Maven Central
    and install the Python distribution from PyPI.
-8. Publish coordinated release notes only after every required artifact and tag
-   is available and verified.
+8. The workflow publishes one coordinated GitHub Release only after every
+   required artifact and tag is available and verified.
 
 Registry publication cannot be atomic. If one publication fails, the train is
 incomplete and must not be announced as released. Preserve successful immutable

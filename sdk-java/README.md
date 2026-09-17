@@ -4,14 +4,14 @@ Generated messages, gRPC stubs and `Features` constants for the official Kubling
 protocol. The supported Java release is declared in the POM. Server support is discovered through
 capabilities; including a definition in this JAR does not enable it on a server.
 
-Coordinates: `com.kubling:kubling-grpc`. The initial package version is `0.1.0`;
-availability depends on a completed release to Maven Central.
+Coordinates: `com.kubling:kubling-grpc`. Official releases share the canonical
+repository version; availability depends on a completed release to Maven Central.
 
 ```xml
 <dependency>
   <groupId>com.kubling</groupId>
   <artifactId>kubling-grpc</artifactId>
-  <version>0.1.0</version>
+  <version>1.1.1</version>
 </dependency>
 ```
 

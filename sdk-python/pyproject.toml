@@ -5,7 +5,7 @@ backend-path = ["."]
 
 [project]
 name = "kubling-grpc"
-version = "0.1.0"
+version = "1.1.1"
 description = "Official generated Python bindings for the Kubling gRPC protocol"
 readme = "README.md"
 requires-python = ">=3.10"
