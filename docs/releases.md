@@ -1,9 +1,10 @@
-# Protocol, Java and Python releases
+# Protocol and client releases
 
-Java and Python are generated client bindings with shared feature constants.
-They expose the protocol; they do not implement a higher-level SQL API or imply
-that an engine supports every feature. The package version and protocol version
-are independent. Both new packages start at `0.1.0`.
+Go, Java and Python are official client artifacts generated from the canonical
+protocol. Go also retains its existing higher-level helpers for the legacy RPCs.
+Generated bindings expose the protocol; they do not imply that an engine
+supports every feature. Client package versions and the protocol version are
+independent.
 
 ## Generated source policy
 
@@ -40,8 +41,17 @@ breaking changes against the currently published `main` label. For protocol
 1.1, run **Protobuf** with version `v1.1.0`, then verify both BSR labels resolve
 to the merge commit and that `proto/v1.1.0` points to the same source commit.
 
+Every protocol release must also account for the checked-in Go bindings. The Go
+workflow regenerates them and fails if the result differs from Git. After the
+protocol tag is published, compare the release commit with the latest Go SDK
+tag. If `sdk-go/` changed, publish the next Go SDK version from a main commit
+that contains those released bindings, then verify its GitHub release and public
+Go module before considering the coordinated release complete. Protocol 1.1.0
+is paired with Go SDK 0.2.0.
+
 | Package | Coordinates | Runtime floor |
 |---|---|---|
+| Go | `github.com/kubling-community/kubling-grpc/sdk-go` | Go 1.25 |
 | Java | `com.kubling:kubling-grpc` | Java 21, protobuf-java 4.36.1, gRPC 1.84.0 |
 | Python | `kubling-grpc`, imports `kubling.v1` / `kubling.features` | Python 3.10, protobuf 7.36.1, grpcio 1.84.0 |
 
@@ -52,12 +62,13 @@ checks whenever generators change.
 
 ## CI and local validation
 
-Pull requests and pushes to main build the packages without publishing. SDK tags
-also validate without publishing. Java compiles and runs tests with Oracle
-GraalVM 25 and produces Java 21 bytecode, following Kubling Core. CI checks both
-the build JDK and effective Maven compiler release, then inspects the packaged
-class versions. The Maven Wrapper also matches Core's Maven 3.9.0 / Wrapper 3.2.0.
-Python builds
+Pull requests and pushes to main regenerate, build and test the Go SDK and build
+the Java/Python packages without publishing. A Go SDK tag validates that it is a
+semantic version on main, repeats generation and tests, and creates the GitHub
+release. Java compiles and runs tests with Oracle GraalVM 25 and produces Java 21
+bytecode, following Kubling Core. CI checks both the build JDK and effective
+Maven compiler release, then inspects the packaged class versions. The Maven
+Wrapper also matches Core's Maven 3.9.0 / Wrapper 3.2.0. Python builds
 an sdist and then a wheel from that sdist, and installs/tests both distributions
 outside the source tree on Python 3.10 and 3.14. Neither workflow needs publishing
 credentials during validation. Both check the contract against `sdk-go/v0.1.1`.
@@ -122,15 +133,28 @@ token permissions are exercised during publication.
 
 ## Publish an approved version
 
-1. Set the intended version in `sdk-java/pom.xml` or `sdk-python/pyproject.toml`.
+1. Regenerate and commit the Go bindings with every protocol change. Confirm the
+   Go workflow succeeds on the final main commit.
+2. Publish the versioned BSR label and matching `proto/vX.Y.Z` tag.
+3. If `sdk-go/` differs from the latest Go SDK tag, create an annotated next
+   semantic version tag such as `sdk-go/v0.2.0` on a main commit containing the
+   released bindings. Its workflow validates the tag and creates the GitHub
+   release. Verify the module resolves through the public Go proxy, for example:
+
+   ```sh
+   GOPROXY=https://proxy.golang.org go list -m \
+     github.com/kubling-community/kubling-grpc/sdk-go@v0.2.0
+   ```
+
+4. Set the intended version in `sdk-java/pom.xml` or `sdk-python/pyproject.toml`.
    Update usage examples, validate, review and merge the change to main.
-2. Create the matching immutable tag: `sdk-java/v0.1.0` or `sdk-python/v0.1.0`.
+5. Create the matching immutable tag: `sdk-java/v0.1.0` or `sdk-python/v0.1.0`.
    Each language releases independently; a version mismatch rejects publication.
-3. Run **Java client** or **Python client** manually from the main workflow,
+6. Run **Java client** or **Python client** manually from the main workflow,
    passing the existing tag. Leave `publish` false for a complete dry validation.
-4. For publication, run with the same tag and `publish` true. The tag must point
+7. For publication, run with the same tag and `publish` true. The tag must point
    to a commit on main.
-5. Verify the artifact on Maven Central/PyPI and install the published version.
+8. Verify the artifact on Maven Central/PyPI and install the published version.
    A green local build does not establish a successful registry publication.
 
 The Java publish job regenerates, tests, packages and signs the tagged sources

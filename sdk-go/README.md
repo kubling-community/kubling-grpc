@@ -7,8 +7,21 @@ The SDK provides an idiomatic Go API that abstracts the underlying gRPC protocol
 ## Installation
 
 ```bash copy
-go get github.com/kubling-community/kubling-grpc/sdk-go
+go get github.com/kubling-community/kubling-grpc/sdk-go@v0.2.0
 ```
+
+## Protocol 1.1 bindings
+
+Version 0.2.0 includes the generated Protocol 1.1 API: generic `Execute`, server
+capabilities, structured errors, transaction status, arrays, spatial values and
+chunked LOB services. Shared negotiated feature names are available from the
+`features` package.
+
+Use `Client.QueryService()` for the generated API. Before calling `Execute`, get
+the authenticated server information and verify `features.GenericExecuteV1`,
+the capability identity, limits and affinity requirements. The existing
+`result.Query` and `exec.Exec` helpers continue to call their original RPCs and
+never replay a failed statement through `Execute`.
 
 # Connecting
 
