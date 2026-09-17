@@ -21,6 +21,55 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type ResultSetRole int32
+
+const (
+	ResultSetRole_RESULT_SET_ROLE_UNSPECIFIED    ResultSetRole = 0
+	ResultSetRole_RESULT_SET_ROLE_QUERY          ResultSetRole = 1
+	ResultSetRole_RESULT_SET_ROLE_GENERATED_KEYS ResultSetRole = 2
+)
+
+// Enum value maps for ResultSetRole.
+var (
+	ResultSetRole_name = map[int32]string{
+		0: "RESULT_SET_ROLE_UNSPECIFIED",
+		1: "RESULT_SET_ROLE_QUERY",
+		2: "RESULT_SET_ROLE_GENERATED_KEYS",
+	}
+	ResultSetRole_value = map[string]int32{
+		"RESULT_SET_ROLE_UNSPECIFIED":    0,
+		"RESULT_SET_ROLE_QUERY":          1,
+		"RESULT_SET_ROLE_GENERATED_KEYS": 2,
+	}
+)
+
+func (x ResultSetRole) Enum() *ResultSetRole {
+	p := new(ResultSetRole)
+	*p = x
+	return p
+}
+
+func (x ResultSetRole) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ResultSetRole) Descriptor() protoreflect.EnumDescriptor {
+	return file_kubling_v1_command_proto_enumTypes[0].Descriptor()
+}
+
+func (ResultSetRole) Type() protoreflect.EnumType {
+	return &file_kubling_v1_command_proto_enumTypes[0]
+}
+
+func (x ResultSetRole) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ResultSetRole.Descriptor instead.
+func (ResultSetRole) EnumDescriptor() ([]byte, []int) {
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{0}
+}
+
 type LoginRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	VdbName         string                 `protobuf:"bytes,1,opt,name=vdb_name,json=vdbName,proto3" json:"vdb_name,omitempty"`
@@ -116,6 +165,7 @@ type LoginResponse struct {
 	ClusterName   string                 `protobuf:"bytes,7,opt,name=cluster_name,json=clusterName,proto3" json:"cluster_name,omitempty"`
 	Timezone      string                 `protobuf:"bytes,8,opt,name=timezone,proto3" json:"timezone,omitempty"`
 	Properties    map[string]string      `protobuf:"bytes,10,rep,name=properties,proto3" json:"properties,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Affinity      *Affinity              `protobuf:"bytes,11,opt,name=affinity,proto3" json:"affinity,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -209,6 +259,13 @@ func (x *LoginResponse) GetTimezone() string {
 func (x *LoginResponse) GetProperties() map[string]string {
 	if x != nil {
 		return x.Properties
+	}
+	return nil
+}
+
+func (x *LoginResponse) GetAffinity() *Affinity {
+	if x != nil {
+		return x.Affinity
 	}
 	return nil
 }
@@ -481,7 +538,10 @@ func (x *SessionPingResponse) GetValid() bool {
 type Parameter struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Parameter value.
-	Value         *Value `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+	Value *Value `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+	// Absent preserves legacy inference, including legacy untyped null.
+	// Present requires typed_parameters_v1 and a value consistent with the type.
+	DeclaredType  *TypeDescriptor `protobuf:"bytes,2,opt,name=declared_type,json=declaredType,proto3" json:"declared_type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -523,6 +583,13 @@ func (x *Parameter) GetValue() *Value {
 	return nil
 }
 
+func (x *Parameter) GetDeclaredType() *TypeDescriptor {
+	if x != nil {
+		return x.DeclaredType
+	}
+	return nil
+}
+
 // SQL execution request.
 //
 // Intended for:
@@ -538,8 +605,11 @@ type ExecRequest struct {
 	Params []*Parameter `protobuf:"bytes,3,rep,name=params,proto3" json:"params,omitempty"`
 	// buf:lint:ignore FIELD_LOWER_SNAKE_CASE
 	ReturnGeneratedKeys bool `protobuf:"varint,4,opt,name=returnGeneratedKeys,proto3" json:"returnGeneratedKeys,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	// Optional assertion of the session's active transaction. Empty preserves
+	// legacy session semantics. Requires transaction_ids_v1 when non-empty.
+	TransactionId string `protobuf:"bytes,5,opt,name=transaction_id,json=transactionId,proto3" json:"transaction_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ExecRequest) Reset() {
@@ -598,6 +668,13 @@ func (x *ExecRequest) GetReturnGeneratedKeys() bool {
 		return x.ReturnGeneratedKeys
 	}
 	return false
+}
+
+func (x *ExecRequest) GetTransactionId() string {
+	if x != nil {
+		return x.TransactionId
+	}
+	return ""
 }
 
 // SQL execution response.
@@ -673,7 +750,9 @@ type QueryRequest struct {
 	// Suggested batch size for streamed results.
 	//
 	// The server may ignore or adjust this value.
-	BatchSize     int32 `protobuf:"varint,5,opt,name=batch_size,json=batchSize,proto3" json:"batch_size,omitempty"`
+	BatchSize int32 `protobuf:"varint,5,opt,name=batch_size,json=batchSize,proto3" json:"batch_size,omitempty"`
+	// Same semantics as ExecRequest.transaction_id.
+	TransactionId string `protobuf:"bytes,6,opt,name=transaction_id,json=transactionId,proto3" json:"transaction_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -743,6 +822,13 @@ func (x *QueryRequest) GetBatchSize() int32 {
 	return 0
 }
 
+func (x *QueryRequest) GetTransactionId() string {
+	if x != nil {
+		return x.TransactionId
+	}
+	return ""
+}
+
 // Result column metadata.
 type Column struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -750,9 +836,11 @@ type Column struct {
 	Name     string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	DataType string `protobuf:"bytes,2,opt,name=data_type,json=dataType,proto3" json:"data_type,omitempty"`
 	// Indicates whether the column allows null values.
-	Nullable      bool  `protobuf:"varint,3,opt,name=nullable,proto3" json:"nullable,omitempty"`
-	Precision     int32 `protobuf:"varint,4,opt,name=precision,proto3" json:"precision,omitempty"`
-	Scale         int32 `protobuf:"varint,5,opt,name=scale,proto3" json:"scale,omitempty"`
+	Nullable  bool  `protobuf:"varint,3,opt,name=nullable,proto3" json:"nullable,omitempty"`
+	Precision int32 `protobuf:"varint,4,opt,name=precision,proto3" json:"precision,omitempty"`
+	Scale     int32 `protobuf:"varint,5,opt,name=scale,proto3" json:"scale,omitempty"`
+	// Required in Execute schemas; legacy data_type remains unchanged.
+	DeclaredType  *TypeDescriptor `protobuf:"bytes,6,opt,name=declared_type,json=declaredType,proto3" json:"declared_type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -820,6 +908,13 @@ func (x *Column) GetScale() int32 {
 		return x.Scale
 	}
 	return 0
+}
+
+func (x *Column) GetDeclaredType() *TypeDescriptor {
+	if x != nil {
+		return x.DeclaredType
+	}
+	return nil
 }
 
 // Result row.
@@ -925,6 +1020,652 @@ func (x *QueryBatch) GetRows() []*Row {
 	return nil
 }
 
+type ExecuteRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ExpiringToken string                 `protobuf:"bytes,1,opt,name=expiring_token,json=expiringToken,proto3" json:"expiring_token,omitempty"`
+	Sql           string                 `protobuf:"bytes,2,opt,name=sql,proto3" json:"sql,omitempty"`
+	Params        []*Parameter           `protobuf:"bytes,3,rep,name=params,proto3" json:"params,omitempty"`
+	// Empty inherits the session's transaction semantics; non-empty asserts the
+	// active transaction's opaque ID and requires transaction_ids_v1.
+	TransactionId string `protobuf:"bytes,4,opt,name=transaction_id,json=transactionId,proto3" json:"transaction_id,omitempty"`
+	// Zero uses the server default; positive values are upper bounds, not hints.
+	BatchSize uint32 `protobuf:"varint,5,opt,name=batch_size,json=batchSize,proto3" json:"batch_size,omitempty"`
+	// Requires advertised AND accepted generated_keys_v1; checked before SQL.
+	ReturnGeneratedKeys bool `protobuf:"varint,6,opt,name=return_generated_keys,json=returnGeneratedKeys,proto3" json:"return_generated_keys,omitempty"`
+	// Obtained from authenticated GetServerInfo. Required and checked before SQL.
+	CapabilityId string `protobuf:"bytes,7,opt,name=capability_id,json=capabilityId,proto3" json:"capability_id,omitempty"`
+	// Explicit opt-in to output representations/multiple results. Input variants
+	// and declared_type activate their features by presence, not by this list.
+	// See protocol/features.json. Unknown/unavailable features fail before SQL.
+	AcceptedFeatures []string `protobuf:"bytes,8,rep,name=accepted_features,json=acceptedFeatures,proto3" json:"accepted_features,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *ExecuteRequest) Reset() {
+	*x = ExecuteRequest{}
+	mi := &file_kubling_v1_command_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExecuteRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExecuteRequest) ProtoMessage() {}
+
+func (x *ExecuteRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_kubling_v1_command_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExecuteRequest.ProtoReflect.Descriptor instead.
+func (*ExecuteRequest) Descriptor() ([]byte, []int) {
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *ExecuteRequest) GetExpiringToken() string {
+	if x != nil {
+		return x.ExpiringToken
+	}
+	return ""
+}
+
+func (x *ExecuteRequest) GetSql() string {
+	if x != nil {
+		return x.Sql
+	}
+	return ""
+}
+
+func (x *ExecuteRequest) GetParams() []*Parameter {
+	if x != nil {
+		return x.Params
+	}
+	return nil
+}
+
+func (x *ExecuteRequest) GetTransactionId() string {
+	if x != nil {
+		return x.TransactionId
+	}
+	return ""
+}
+
+func (x *ExecuteRequest) GetBatchSize() uint32 {
+	if x != nil {
+		return x.BatchSize
+	}
+	return 0
+}
+
+func (x *ExecuteRequest) GetReturnGeneratedKeys() bool {
+	if x != nil {
+		return x.ReturnGeneratedKeys
+	}
+	return false
+}
+
+func (x *ExecuteRequest) GetCapabilityId() string {
+	if x != nil {
+		return x.CapabilityId
+	}
+	return ""
+}
+
+func (x *ExecuteRequest) GetAcceptedFeatures() []string {
+	if x != nil {
+		return x.AcceptedFeatures
+	}
+	return nil
+}
+
+// Ordered event stream; see docs/client-contract-v1.md for the state machine.
+// Unknown/missing event alternatives are not successful or skippable results.
+type ExecuteResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Event:
+	//
+	//	*ExecuteResponse_ResultSetStart
+	//	*ExecuteResponse_ResultRows
+	//	*ExecuteResponse_UpdateResult
+	//	*ExecuteResponse_ResultSetEnd
+	//	*ExecuteResponse_ExecutionEnd
+	Event         isExecuteResponse_Event `protobuf_oneof:"event"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ExecuteResponse) Reset() {
+	*x = ExecuteResponse{}
+	mi := &file_kubling_v1_command_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExecuteResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExecuteResponse) ProtoMessage() {}
+
+func (x *ExecuteResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_kubling_v1_command_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExecuteResponse.ProtoReflect.Descriptor instead.
+func (*ExecuteResponse) Descriptor() ([]byte, []int) {
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *ExecuteResponse) GetEvent() isExecuteResponse_Event {
+	if x != nil {
+		return x.Event
+	}
+	return nil
+}
+
+func (x *ExecuteResponse) GetResultSetStart() *ResultSetStart {
+	if x != nil {
+		if x, ok := x.Event.(*ExecuteResponse_ResultSetStart); ok {
+			return x.ResultSetStart
+		}
+	}
+	return nil
+}
+
+func (x *ExecuteResponse) GetResultRows() *ResultRows {
+	if x != nil {
+		if x, ok := x.Event.(*ExecuteResponse_ResultRows); ok {
+			return x.ResultRows
+		}
+	}
+	return nil
+}
+
+func (x *ExecuteResponse) GetUpdateResult() *UpdateResult {
+	if x != nil {
+		if x, ok := x.Event.(*ExecuteResponse_UpdateResult); ok {
+			return x.UpdateResult
+		}
+	}
+	return nil
+}
+
+func (x *ExecuteResponse) GetResultSetEnd() *ResultSetEnd {
+	if x != nil {
+		if x, ok := x.Event.(*ExecuteResponse_ResultSetEnd); ok {
+			return x.ResultSetEnd
+		}
+	}
+	return nil
+}
+
+func (x *ExecuteResponse) GetExecutionEnd() *ExecutionEnd {
+	if x != nil {
+		if x, ok := x.Event.(*ExecuteResponse_ExecutionEnd); ok {
+			return x.ExecutionEnd
+		}
+	}
+	return nil
+}
+
+type isExecuteResponse_Event interface {
+	isExecuteResponse_Event()
+}
+
+type ExecuteResponse_ResultSetStart struct {
+	ResultSetStart *ResultSetStart `protobuf:"bytes,1,opt,name=result_set_start,json=resultSetStart,proto3,oneof"`
+}
+
+type ExecuteResponse_ResultRows struct {
+	ResultRows *ResultRows `protobuf:"bytes,2,opt,name=result_rows,json=resultRows,proto3,oneof"`
+}
+
+type ExecuteResponse_UpdateResult struct {
+	UpdateResult *UpdateResult `protobuf:"bytes,3,opt,name=update_result,json=updateResult,proto3,oneof"`
+}
+
+type ExecuteResponse_ResultSetEnd struct {
+	ResultSetEnd *ResultSetEnd `protobuf:"bytes,4,opt,name=result_set_end,json=resultSetEnd,proto3,oneof"`
+}
+
+type ExecuteResponse_ExecutionEnd struct {
+	ExecutionEnd *ExecutionEnd `protobuf:"bytes,5,opt,name=execution_end,json=executionEnd,proto3,oneof"`
+}
+
+func (*ExecuteResponse_ResultSetStart) isExecuteResponse_Event() {}
+
+func (*ExecuteResponse_ResultRows) isExecuteResponse_Event() {}
+
+func (*ExecuteResponse_UpdateResult) isExecuteResponse_Event() {}
+
+func (*ExecuteResponse_ResultSetEnd) isExecuteResponse_Event() {}
+
+func (*ExecuteResponse_ExecutionEnd) isExecuteResponse_Event() {}
+
+type ResultSetStart struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Consecutive IDs starting at 1, including update results and generated keys.
+	ResultId uint64        `protobuf:"varint,1,opt,name=result_id,json=resultId,proto3" json:"result_id,omitempty"`
+	Columns  []*Column     `protobuf:"bytes,2,rep,name=columns,proto3" json:"columns,omitempty"`
+	Role     ResultSetRole `protobuf:"varint,3,opt,name=role,proto3,enum=kubling.v1.ResultSetRole" json:"role,omitempty"`
+	// Present only for generated keys; identifies the preceding UpdateResult.
+	ParentResultId *uint64 `protobuf:"varint,4,opt,name=parent_result_id,json=parentResultId,proto3,oneof" json:"parent_result_id,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *ResultSetStart) Reset() {
+	*x = ResultSetStart{}
+	mi := &file_kubling_v1_command_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResultSetStart) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResultSetStart) ProtoMessage() {}
+
+func (x *ResultSetStart) ProtoReflect() protoreflect.Message {
+	mi := &file_kubling_v1_command_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResultSetStart.ProtoReflect.Descriptor instead.
+func (*ResultSetStart) Descriptor() ([]byte, []int) {
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *ResultSetStart) GetResultId() uint64 {
+	if x != nil {
+		return x.ResultId
+	}
+	return 0
+}
+
+func (x *ResultSetStart) GetColumns() []*Column {
+	if x != nil {
+		return x.Columns
+	}
+	return nil
+}
+
+func (x *ResultSetStart) GetRole() ResultSetRole {
+	if x != nil {
+		return x.Role
+	}
+	return ResultSetRole_RESULT_SET_ROLE_UNSPECIFIED
+}
+
+func (x *ResultSetStart) GetParentResultId() uint64 {
+	if x != nil && x.ParentResultId != nil {
+		return *x.ParentResultId
+	}
+	return 0
+}
+
+type ResultRows struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ResultId      uint64                 `protobuf:"varint,1,opt,name=result_id,json=resultId,proto3" json:"result_id,omitempty"`
+	Rows          []*Row                 `protobuf:"bytes,2,rep,name=rows,proto3" json:"rows,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResultRows) Reset() {
+	*x = ResultRows{}
+	mi := &file_kubling_v1_command_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResultRows) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResultRows) ProtoMessage() {}
+
+func (x *ResultRows) ProtoReflect() protoreflect.Message {
+	mi := &file_kubling_v1_command_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResultRows.ProtoReflect.Descriptor instead.
+func (*ResultRows) Descriptor() ([]byte, []int) {
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *ResultRows) GetResultId() uint64 {
+	if x != nil {
+		return x.ResultId
+	}
+	return 0
+}
+
+func (x *ResultRows) GetRows() []*Row {
+	if x != nil {
+		return x.Rows
+	}
+	return nil
+}
+
+type UnknownUpdateCount struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UnknownUpdateCount) Reset() {
+	*x = UnknownUpdateCount{}
+	mi := &file_kubling_v1_command_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnknownUpdateCount) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnknownUpdateCount) ProtoMessage() {}
+
+func (x *UnknownUpdateCount) ProtoReflect() protoreflect.Message {
+	mi := &file_kubling_v1_command_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnknownUpdateCount.ProtoReflect.Descriptor instead.
+func (*UnknownUpdateCount) Descriptor() ([]byte, []int) {
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{19}
+}
+
+// Zero affected rows is a known count, distinct from an unknown count.
+type UpdateCount struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Value:
+	//
+	//	*UpdateCount_AffectedRows
+	//	*UpdateCount_Unknown
+	Value         isUpdateCount_Value `protobuf_oneof:"value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateCount) Reset() {
+	*x = UpdateCount{}
+	mi := &file_kubling_v1_command_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateCount) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateCount) ProtoMessage() {}
+
+func (x *UpdateCount) ProtoReflect() protoreflect.Message {
+	mi := &file_kubling_v1_command_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateCount.ProtoReflect.Descriptor instead.
+func (*UpdateCount) Descriptor() ([]byte, []int) {
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *UpdateCount) GetValue() isUpdateCount_Value {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+func (x *UpdateCount) GetAffectedRows() uint64 {
+	if x != nil {
+		if x, ok := x.Value.(*UpdateCount_AffectedRows); ok {
+			return x.AffectedRows
+		}
+	}
+	return 0
+}
+
+func (x *UpdateCount) GetUnknown() *UnknownUpdateCount {
+	if x != nil {
+		if x, ok := x.Value.(*UpdateCount_Unknown); ok {
+			return x.Unknown
+		}
+	}
+	return nil
+}
+
+type isUpdateCount_Value interface {
+	isUpdateCount_Value()
+}
+
+type UpdateCount_AffectedRows struct {
+	AffectedRows uint64 `protobuf:"varint,1,opt,name=affected_rows,json=affectedRows,proto3,oneof"`
+}
+
+type UpdateCount_Unknown struct {
+	Unknown *UnknownUpdateCount `protobuf:"bytes,2,opt,name=unknown,proto3,oneof"`
+}
+
+func (*UpdateCount_AffectedRows) isUpdateCount_Value() {}
+
+func (*UpdateCount_Unknown) isUpdateCount_Value() {}
+
+// Complete update result. Counts preserve engine order and are non-empty.
+// This message does not introduce batch SQL submission or atomicity guarantees.
+// DDL, SET and other commands without a natural row set also use UpdateResult;
+// if no reliable count exists, use UnknownUpdateCount rather than inventing zero.
+type UpdateResult struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ResultId      uint64                 `protobuf:"varint,1,opt,name=result_id,json=resultId,proto3" json:"result_id,omitempty"`
+	Counts        []*UpdateCount         `protobuf:"bytes,2,rep,name=counts,proto3" json:"counts,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateResult) Reset() {
+	*x = UpdateResult{}
+	mi := &file_kubling_v1_command_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateResult) ProtoMessage() {}
+
+func (x *UpdateResult) ProtoReflect() protoreflect.Message {
+	mi := &file_kubling_v1_command_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateResult.ProtoReflect.Descriptor instead.
+func (*UpdateResult) Descriptor() ([]byte, []int) {
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *UpdateResult) GetResultId() uint64 {
+	if x != nil {
+		return x.ResultId
+	}
+	return 0
+}
+
+func (x *UpdateResult) GetCounts() []*UpdateCount {
+	if x != nil {
+		return x.Counts
+	}
+	return nil
+}
+
+type ResultSetEnd struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ResultId      uint64                 `protobuf:"varint,1,opt,name=result_id,json=resultId,proto3" json:"result_id,omitempty"`
+	RowCount      uint64                 `protobuf:"varint,2,opt,name=row_count,json=rowCount,proto3" json:"row_count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResultSetEnd) Reset() {
+	*x = ResultSetEnd{}
+	mi := &file_kubling_v1_command_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResultSetEnd) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResultSetEnd) ProtoMessage() {}
+
+func (x *ResultSetEnd) ProtoReflect() protoreflect.Message {
+	mi := &file_kubling_v1_command_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResultSetEnd.ProtoReflect.Descriptor instead.
+func (*ResultSetEnd) Descriptor() ([]byte, []int) {
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *ResultSetEnd) GetResultId() uint64 {
+	if x != nil {
+		return x.ResultId
+	}
+	return 0
+}
+
+func (x *ResultSetEnd) GetRowCount() uint64 {
+	if x != nil {
+		return x.RowCount
+	}
+	return 0
+}
+
+// Exactly once on success, after all results. Successful completion also
+// requires final gRPC OK; a broken stream must not be treated as success.
+// Successful autocommit reports NONE with an empty transaction ID. Cancellation
+// or error emits no ExecutionEnd; propagate cancellation and close execution
+// resources. A race after completion may still lose the final transport status.
+type ExecutionEnd struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ResultCount   uint64                 `protobuf:"varint,1,opt,name=result_count,json=resultCount,proto3" json:"result_count,omitempty"`
+	Transaction   *TransactionStatus     `protobuf:"bytes,2,opt,name=transaction,proto3" json:"transaction,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ExecutionEnd) Reset() {
+	*x = ExecutionEnd{}
+	mi := &file_kubling_v1_command_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExecutionEnd) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExecutionEnd) ProtoMessage() {}
+
+func (x *ExecutionEnd) ProtoReflect() protoreflect.Message {
+	mi := &file_kubling_v1_command_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExecutionEnd.ProtoReflect.Descriptor instead.
+func (*ExecutionEnd) Descriptor() ([]byte, []int) {
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *ExecutionEnd) GetResultCount() uint64 {
+	if x != nil {
+		return x.ResultCount
+	}
+	return 0
+}
+
+func (x *ExecutionEnd) GetTransaction() *TransactionStatus {
+	if x != nil {
+		return x.Transaction
+	}
+	return nil
+}
+
 // Transaction start request.
 type BeginTransactionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -935,7 +1676,7 @@ type BeginTransactionRequest struct {
 
 func (x *BeginTransactionRequest) Reset() {
 	*x = BeginTransactionRequest{}
-	mi := &file_kubling_v1_command_proto_msgTypes[15]
+	mi := &file_kubling_v1_command_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -947,7 +1688,7 @@ func (x *BeginTransactionRequest) String() string {
 func (*BeginTransactionRequest) ProtoMessage() {}
 
 func (x *BeginTransactionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[15]
+	mi := &file_kubling_v1_command_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -960,7 +1701,7 @@ func (x *BeginTransactionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BeginTransactionRequest.ProtoReflect.Descriptor instead.
 func (*BeginTransactionRequest) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{15}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *BeginTransactionRequest) GetExpiringToken() string {
@@ -972,14 +1713,17 @@ func (x *BeginTransactionRequest) GetExpiringToken() string {
 
 // Transaction start response.
 type BeginTransactionResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Returned when transaction_ids_v1 is supported. IDs are never reused.
+	TransactionId string    `protobuf:"bytes,1,opt,name=transaction_id,json=transactionId,proto3" json:"transaction_id,omitempty"`
+	Affinity      *Affinity `protobuf:"bytes,2,opt,name=affinity,proto3" json:"affinity,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *BeginTransactionResponse) Reset() {
 	*x = BeginTransactionResponse{}
-	mi := &file_kubling_v1_command_proto_msgTypes[16]
+	mi := &file_kubling_v1_command_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -991,7 +1735,7 @@ func (x *BeginTransactionResponse) String() string {
 func (*BeginTransactionResponse) ProtoMessage() {}
 
 func (x *BeginTransactionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[16]
+	mi := &file_kubling_v1_command_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1004,20 +1748,37 @@ func (x *BeginTransactionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BeginTransactionResponse.ProtoReflect.Descriptor instead.
 func (*BeginTransactionResponse) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{16}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *BeginTransactionResponse) GetTransactionId() string {
+	if x != nil {
+		return x.TransactionId
+	}
+	return ""
+}
+
+func (x *BeginTransactionResponse) GetAffinity() *Affinity {
+	if x != nil {
+		return x.Affinity
+	}
+	return nil
 }
 
 // Transaction commit request.
 type CommitTransactionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ExpiringToken string                 `protobuf:"bytes,1,opt,name=expiring_token,json=expiringToken,proto3" json:"expiring_token,omitempty"`
+	// Empty preserves legacy behavior. A non-empty stale ID must fail before
+	// committing anything, even if a different transaction is now active.
+	TransactionId string `protobuf:"bytes,2,opt,name=transaction_id,json=transactionId,proto3" json:"transaction_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CommitTransactionRequest) Reset() {
 	*x = CommitTransactionRequest{}
-	mi := &file_kubling_v1_command_proto_msgTypes[17]
+	mi := &file_kubling_v1_command_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1029,7 +1790,7 @@ func (x *CommitTransactionRequest) String() string {
 func (*CommitTransactionRequest) ProtoMessage() {}
 
 func (x *CommitTransactionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[17]
+	mi := &file_kubling_v1_command_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1042,7 +1803,7 @@ func (x *CommitTransactionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CommitTransactionRequest.ProtoReflect.Descriptor instead.
 func (*CommitTransactionRequest) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{17}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *CommitTransactionRequest) GetExpiringToken() string {
@@ -1052,17 +1813,25 @@ func (x *CommitTransactionRequest) GetExpiringToken() string {
 	return ""
 }
 
+func (x *CommitTransactionRequest) GetTransactionId() string {
+	if x != nil {
+		return x.TransactionId
+	}
+	return ""
+}
+
 // Transaction commit response.
 type CommitTransactionResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	Transaction   *TransactionStatus     `protobuf:"bytes,2,opt,name=transaction,proto3" json:"transaction,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CommitTransactionResponse) Reset() {
 	*x = CommitTransactionResponse{}
-	mi := &file_kubling_v1_command_proto_msgTypes[18]
+	mi := &file_kubling_v1_command_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1074,7 +1843,7 @@ func (x *CommitTransactionResponse) String() string {
 func (*CommitTransactionResponse) ProtoMessage() {}
 
 func (x *CommitTransactionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[18]
+	mi := &file_kubling_v1_command_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1087,7 +1856,7 @@ func (x *CommitTransactionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CommitTransactionResponse.ProtoReflect.Descriptor instead.
 func (*CommitTransactionResponse) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{18}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *CommitTransactionResponse) GetSuccess() bool {
@@ -1097,17 +1866,25 @@ func (x *CommitTransactionResponse) GetSuccess() bool {
 	return false
 }
 
+func (x *CommitTransactionResponse) GetTransaction() *TransactionStatus {
+	if x != nil {
+		return x.Transaction
+	}
+	return nil
+}
+
 // Transaction rollback request.
 type RollbackTransactionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ExpiringToken string                 `protobuf:"bytes,1,opt,name=expiring_token,json=expiringToken,proto3" json:"expiring_token,omitempty"`
+	TransactionId string                 `protobuf:"bytes,2,opt,name=transaction_id,json=transactionId,proto3" json:"transaction_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *RollbackTransactionRequest) Reset() {
 	*x = RollbackTransactionRequest{}
-	mi := &file_kubling_v1_command_proto_msgTypes[19]
+	mi := &file_kubling_v1_command_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1119,7 +1896,7 @@ func (x *RollbackTransactionRequest) String() string {
 func (*RollbackTransactionRequest) ProtoMessage() {}
 
 func (x *RollbackTransactionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[19]
+	mi := &file_kubling_v1_command_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1132,7 +1909,7 @@ func (x *RollbackTransactionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RollbackTransactionRequest.ProtoReflect.Descriptor instead.
 func (*RollbackTransactionRequest) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{19}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *RollbackTransactionRequest) GetExpiringToken() string {
@@ -1142,17 +1919,27 @@ func (x *RollbackTransactionRequest) GetExpiringToken() string {
 	return ""
 }
 
+func (x *RollbackTransactionRequest) GetTransactionId() string {
+	if x != nil {
+		return x.TransactionId
+	}
+	return ""
+}
+
 // Transaction rollback response.
 type RollbackTransactionResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// No active transaction: successful idempotent no-op, NONE with empty ID.
+	// This does not establish the outcome of a historical explicit request ID.
+	Success       bool               `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	Transaction   *TransactionStatus `protobuf:"bytes,2,opt,name=transaction,proto3" json:"transaction,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *RollbackTransactionResponse) Reset() {
 	*x = RollbackTransactionResponse{}
-	mi := &file_kubling_v1_command_proto_msgTypes[20]
+	mi := &file_kubling_v1_command_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1164,7 +1951,7 @@ func (x *RollbackTransactionResponse) String() string {
 func (*RollbackTransactionResponse) ProtoMessage() {}
 
 func (x *RollbackTransactionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[20]
+	mi := &file_kubling_v1_command_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1177,7 +1964,7 @@ func (x *RollbackTransactionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RollbackTransactionResponse.ProtoReflect.Descriptor instead.
 func (*RollbackTransactionResponse) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{20}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *RollbackTransactionResponse) GetSuccess() bool {
@@ -1185,6 +1972,13 @@ func (x *RollbackTransactionResponse) GetSuccess() bool {
 		return x.Success
 	}
 	return false
+}
+
+func (x *RollbackTransactionResponse) GetTransaction() *TransactionStatus {
+	if x != nil {
+		return x.Transaction
+	}
+	return nil
 }
 
 type IsInTransactionRequest struct {
@@ -1196,7 +1990,7 @@ type IsInTransactionRequest struct {
 
 func (x *IsInTransactionRequest) Reset() {
 	*x = IsInTransactionRequest{}
-	mi := &file_kubling_v1_command_proto_msgTypes[21]
+	mi := &file_kubling_v1_command_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1208,7 +2002,7 @@ func (x *IsInTransactionRequest) String() string {
 func (*IsInTransactionRequest) ProtoMessage() {}
 
 func (x *IsInTransactionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[21]
+	mi := &file_kubling_v1_command_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1221,7 +2015,7 @@ func (x *IsInTransactionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IsInTransactionRequest.ProtoReflect.Descriptor instead.
 func (*IsInTransactionRequest) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{21}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *IsInTransactionRequest) GetExpiringToken() string {
@@ -1232,15 +2026,17 @@ func (x *IsInTransactionRequest) GetExpiringToken() string {
 }
 
 type IsInTransactionResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Active        bool                   `protobuf:"varint,1,opt,name=active,proto3" json:"active,omitempty"`
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	Active bool                   `protobuf:"varint,1,opt,name=active,proto3" json:"active,omitempty"`
+	// Optional additional observation. active=false alone proves no outcome.
+	Transaction   *TransactionStatus `protobuf:"bytes,2,opt,name=transaction,proto3" json:"transaction,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *IsInTransactionResponse) Reset() {
 	*x = IsInTransactionResponse{}
-	mi := &file_kubling_v1_command_proto_msgTypes[22]
+	mi := &file_kubling_v1_command_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1252,7 +2048,7 @@ func (x *IsInTransactionResponse) String() string {
 func (*IsInTransactionResponse) ProtoMessage() {}
 
 func (x *IsInTransactionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[22]
+	mi := &file_kubling_v1_command_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1265,7 +2061,7 @@ func (x *IsInTransactionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IsInTransactionResponse.ProtoReflect.Descriptor instead.
 func (*IsInTransactionResponse) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{22}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *IsInTransactionResponse) GetActive() bool {
@@ -1275,16 +2071,123 @@ func (x *IsInTransactionResponse) GetActive() bool {
 	return false
 }
 
+func (x *IsInTransactionResponse) GetTransaction() *TransactionStatus {
+	if x != nil {
+		return x.Transaction
+	}
+	return nil
+}
+
+type GetTransactionStatusRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ExpiringToken string                 `protobuf:"bytes,1,opt,name=expiring_token,json=expiringToken,proto3" json:"expiring_token,omitempty"`
+	// Required non-empty ID; unknown/expired lookups preserve it in UNKNOWN.
+	TransactionId string `protobuf:"bytes,2,opt,name=transaction_id,json=transactionId,proto3" json:"transaction_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetTransactionStatusRequest) Reset() {
+	*x = GetTransactionStatusRequest{}
+	mi := &file_kubling_v1_command_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetTransactionStatusRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetTransactionStatusRequest) ProtoMessage() {}
+
+func (x *GetTransactionStatusRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_kubling_v1_command_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetTransactionStatusRequest.ProtoReflect.Descriptor instead.
+func (*GetTransactionStatusRequest) Descriptor() ([]byte, []int) {
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *GetTransactionStatusRequest) GetExpiringToken() string {
+	if x != nil {
+		return x.ExpiringToken
+	}
+	return ""
+}
+
+func (x *GetTransactionStatusRequest) GetTransactionId() string {
+	if x != nil {
+		return x.TransactionId
+	}
+	return ""
+}
+
+type GetTransactionStatusResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Transaction   *TransactionStatus     `protobuf:"bytes,1,opt,name=transaction,proto3" json:"transaction,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetTransactionStatusResponse) Reset() {
+	*x = GetTransactionStatusResponse{}
+	mi := &file_kubling_v1_command_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetTransactionStatusResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetTransactionStatusResponse) ProtoMessage() {}
+
+func (x *GetTransactionStatusResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_kubling_v1_command_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetTransactionStatusResponse.ProtoReflect.Descriptor instead.
+func (*GetTransactionStatusResponse) Descriptor() ([]byte, []int) {
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *GetTransactionStatusResponse) GetTransaction() *TransactionStatus {
+	if x != nil {
+		return x.Transaction
+	}
+	return nil
+}
+
 // Server metadata request.
 type GetServerInfoRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Empty preserves legacy product information. Effective new capabilities
+	// require an authenticated session and must describe its VDB and node.
+	ExpiringToken string `protobuf:"bytes,1,opt,name=expiring_token,json=expiringToken,proto3" json:"expiring_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetServerInfoRequest) Reset() {
 	*x = GetServerInfoRequest{}
-	mi := &file_kubling_v1_command_proto_msgTypes[23]
+	mi := &file_kubling_v1_command_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1296,7 +2199,7 @@ func (x *GetServerInfoRequest) String() string {
 func (*GetServerInfoRequest) ProtoMessage() {}
 
 func (x *GetServerInfoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[23]
+	mi := &file_kubling_v1_command_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1309,7 +2212,14 @@ func (x *GetServerInfoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetServerInfoRequest.ProtoReflect.Descriptor instead.
 func (*GetServerInfoRequest) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{23}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *GetServerInfoRequest) GetExpiringToken() string {
+	if x != nil {
+		return x.ExpiringToken
+	}
+	return ""
 }
 
 // Server metadata response.
@@ -1321,14 +2231,15 @@ type GetServerInfoResponse struct {
 	// "26.3.1"
 	ServerVersion string `protobuf:"bytes,1,opt,name=server_version,json=serverVersion,proto3" json:"server_version,omitempty"`
 	// Supported optional or configured features.
-	Features      []string `protobuf:"bytes,2,rep,name=features,proto3" json:"features,omitempty"`
+	Features      []string      `protobuf:"bytes,2,rep,name=features,proto3" json:"features,omitempty"`
+	Capabilities  *Capabilities `protobuf:"bytes,3,opt,name=capabilities,proto3" json:"capabilities,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetServerInfoResponse) Reset() {
 	*x = GetServerInfoResponse{}
-	mi := &file_kubling_v1_command_proto_msgTypes[24]
+	mi := &file_kubling_v1_command_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1340,7 +2251,7 @@ func (x *GetServerInfoResponse) String() string {
 func (*GetServerInfoResponse) ProtoMessage() {}
 
 func (x *GetServerInfoResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_command_proto_msgTypes[24]
+	mi := &file_kubling_v1_command_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1353,7 +2264,7 @@ func (x *GetServerInfoResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetServerInfoResponse.ProtoReflect.Descriptor instead.
 func (*GetServerInfoResponse) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_command_proto_rawDescGZIP(), []int{24}
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *GetServerInfoResponse) GetServerVersion() string {
@@ -1370,12 +2281,19 @@ func (x *GetServerInfoResponse) GetFeatures() []string {
 	return nil
 }
 
+func (x *GetServerInfoResponse) GetCapabilities() *Capabilities {
+	if x != nil {
+		return x.Capabilities
+	}
+	return nil
+}
+
 var File_kubling_v1_command_proto protoreflect.FileDescriptor
 
 const file_kubling_v1_command_proto_rawDesc = "" +
 	"\n" +
 	"\x18kubling/v1/command.proto\x12\n" +
-	"kubling.v1\x1a\x16kubling/v1/value.proto\"\xb6\x02\n" +
+	"kubling.v1\x1a\x1bkubling/v1/capability.proto\x1a\x1ckubling/v1/transaction.proto\x1a\x16kubling/v1/value.proto\"\xb6\x02\n" +
 	"\fLoginRequest\x12\x19\n" +
 	"\bvdb_name\x18\x01 \x01(\tR\avdbName\x12\x1f\n" +
 	"\vvdb_version\x18\x02 \x01(\tR\n" +
@@ -1389,7 +2307,7 @@ const file_kubling_v1_command_proto_rawDesc = "" +
 	"properties\x1a=\n" +
 	"\x0fPropertiesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x95\x03\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xc7\x03\n" +
 	"\rLoginResponse\x12%\n" +
 	"\x0eexpiring_token\x18\x01 \x01(\tR\rexpiringToken\x12\x1d\n" +
 	"\n" +
@@ -1405,7 +2323,8 @@ const file_kubling_v1_command_proto_rawDesc = "" +
 	"\n" +
 	"properties\x18\n" +
 	" \x03(\v2).kubling.v1.LoginResponse.PropertiesEntryR\n" +
-	"properties\x1a=\n" +
+	"properties\x120\n" +
+	"\baffinity\x18\v \x01(\v2\x14.kubling.v1.AffinityR\baffinity\x1a=\n" +
 	"\x0fPropertiesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"6\n" +
@@ -1421,19 +2340,21 @@ const file_kubling_v1_command_proto_rawDesc = "" +
 	"\n" +
 	"session_id\x18\x02 \x01(\tR\tsessionId\"+\n" +
 	"\x13SessionPingResponse\x12\x14\n" +
-	"\x05valid\x18\x01 \x01(\bR\x05valid\"4\n" +
+	"\x05valid\x18\x01 \x01(\bR\x05valid\"u\n" +
 	"\tParameter\x12'\n" +
-	"\x05value\x18\x01 \x01(\v2\x11.kubling.v1.ValueR\x05value\"\xa7\x01\n" +
+	"\x05value\x18\x01 \x01(\v2\x11.kubling.v1.ValueR\x05value\x12?\n" +
+	"\rdeclared_type\x18\x02 \x01(\v2\x1a.kubling.v1.TypeDescriptorR\fdeclaredType\"\xce\x01\n" +
 	"\vExecRequest\x12%\n" +
 	"\x0eexpiring_token\x18\x01 \x01(\tR\rexpiringToken\x12\x10\n" +
 	"\x03sql\x18\x02 \x01(\tR\x03sql\x12-\n" +
 	"\x06params\x18\x03 \x03(\v2\x15.kubling.v1.ParameterR\x06params\x120\n" +
-	"\x13returnGeneratedKeys\x18\x04 \x01(\bR\x13returnGeneratedKeys\"\xaf\x01\n" +
+	"\x13returnGeneratedKeys\x18\x04 \x01(\bR\x13returnGeneratedKeys\x12%\n" +
+	"\x0etransaction_id\x18\x05 \x01(\tR\rtransactionId\"\xaf\x01\n" +
 	"\fExecResponse\x12#\n" +
 	"\raffected_rows\x18\x01 \x01(\x03R\faffectedRows\x12#\n" +
 	"\rupdate_counts\x18\x02 \x03(\x03R\fupdateCounts\x12B\n" +
 	"\x0egenerated_keys\x18\x03 \x01(\v2\x16.kubling.v1.QueryBatchH\x00R\rgeneratedKeys\x88\x01\x01B\x11\n" +
-	"\x0f_generated_keys\"\xb4\x01\n" +
+	"\x0f_generated_keys\"\xdb\x01\n" +
 	"\fQueryRequest\x12%\n" +
 	"\x0eexpiring_token\x18\x01 \x01(\tR\rexpiringToken\x12\x1d\n" +
 	"\n" +
@@ -1441,52 +2362,116 @@ const file_kubling_v1_command_proto_rawDesc = "" +
 	"\x03sql\x18\x03 \x01(\tR\x03sql\x12-\n" +
 	"\x06params\x18\x04 \x03(\v2\x15.kubling.v1.ParameterR\x06params\x12\x1d\n" +
 	"\n" +
-	"batch_size\x18\x05 \x01(\x05R\tbatchSize\"\x89\x01\n" +
+	"batch_size\x18\x05 \x01(\x05R\tbatchSize\x12%\n" +
+	"\x0etransaction_id\x18\x06 \x01(\tR\rtransactionId\"\xca\x01\n" +
 	"\x06Column\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1b\n" +
 	"\tdata_type\x18\x02 \x01(\tR\bdataType\x12\x1a\n" +
 	"\bnullable\x18\x03 \x01(\bR\bnullable\x12\x1c\n" +
 	"\tprecision\x18\x04 \x01(\x05R\tprecision\x12\x14\n" +
-	"\x05scale\x18\x05 \x01(\x05R\x05scale\"0\n" +
+	"\x05scale\x18\x05 \x01(\x05R\x05scale\x12?\n" +
+	"\rdeclared_type\x18\x06 \x01(\v2\x1a.kubling.v1.TypeDescriptorR\fdeclaredType\"0\n" +
 	"\x03Row\x12)\n" +
 	"\x06values\x18\x01 \x03(\v2\x11.kubling.v1.ValueR\x06values\"_\n" +
 	"\n" +
 	"QueryBatch\x12,\n" +
 	"\acolumns\x18\x01 \x03(\v2\x12.kubling.v1.ColumnR\acolumns\x12#\n" +
-	"\x04rows\x18\x02 \x03(\v2\x0f.kubling.v1.RowR\x04rows\"@\n" +
+	"\x04rows\x18\x02 \x03(\v2\x0f.kubling.v1.RowR\x04rows\"\xc4\x02\n" +
+	"\x0eExecuteRequest\x12%\n" +
+	"\x0eexpiring_token\x18\x01 \x01(\tR\rexpiringToken\x12\x10\n" +
+	"\x03sql\x18\x02 \x01(\tR\x03sql\x12-\n" +
+	"\x06params\x18\x03 \x03(\v2\x15.kubling.v1.ParameterR\x06params\x12%\n" +
+	"\x0etransaction_id\x18\x04 \x01(\tR\rtransactionId\x12\x1d\n" +
+	"\n" +
+	"batch_size\x18\x05 \x01(\rR\tbatchSize\x122\n" +
+	"\x15return_generated_keys\x18\x06 \x01(\bR\x13returnGeneratedKeys\x12#\n" +
+	"\rcapability_id\x18\a \x01(\tR\fcapabilityId\x12+\n" +
+	"\x11accepted_features\x18\b \x03(\tR\x10acceptedFeatures\"\xe1\x02\n" +
+	"\x0fExecuteResponse\x12F\n" +
+	"\x10result_set_start\x18\x01 \x01(\v2\x1a.kubling.v1.ResultSetStartH\x00R\x0eresultSetStart\x129\n" +
+	"\vresult_rows\x18\x02 \x01(\v2\x16.kubling.v1.ResultRowsH\x00R\n" +
+	"resultRows\x12?\n" +
+	"\rupdate_result\x18\x03 \x01(\v2\x18.kubling.v1.UpdateResultH\x00R\fupdateResult\x12@\n" +
+	"\x0eresult_set_end\x18\x04 \x01(\v2\x18.kubling.v1.ResultSetEndH\x00R\fresultSetEnd\x12?\n" +
+	"\rexecution_end\x18\x05 \x01(\v2\x18.kubling.v1.ExecutionEndH\x00R\fexecutionEndB\a\n" +
+	"\x05event\"\xce\x01\n" +
+	"\x0eResultSetStart\x12\x1b\n" +
+	"\tresult_id\x18\x01 \x01(\x04R\bresultId\x12,\n" +
+	"\acolumns\x18\x02 \x03(\v2\x12.kubling.v1.ColumnR\acolumns\x12-\n" +
+	"\x04role\x18\x03 \x01(\x0e2\x19.kubling.v1.ResultSetRoleR\x04role\x12-\n" +
+	"\x10parent_result_id\x18\x04 \x01(\x04H\x00R\x0eparentResultId\x88\x01\x01B\x13\n" +
+	"\x11_parent_result_id\"N\n" +
+	"\n" +
+	"ResultRows\x12\x1b\n" +
+	"\tresult_id\x18\x01 \x01(\x04R\bresultId\x12#\n" +
+	"\x04rows\x18\x02 \x03(\v2\x0f.kubling.v1.RowR\x04rows\"\x14\n" +
+	"\x12UnknownUpdateCount\"y\n" +
+	"\vUpdateCount\x12%\n" +
+	"\raffected_rows\x18\x01 \x01(\x04H\x00R\faffectedRows\x12:\n" +
+	"\aunknown\x18\x02 \x01(\v2\x1e.kubling.v1.UnknownUpdateCountH\x00R\aunknownB\a\n" +
+	"\x05value\"\\\n" +
+	"\fUpdateResult\x12\x1b\n" +
+	"\tresult_id\x18\x01 \x01(\x04R\bresultId\x12/\n" +
+	"\x06counts\x18\x02 \x03(\v2\x17.kubling.v1.UpdateCountR\x06counts\"H\n" +
+	"\fResultSetEnd\x12\x1b\n" +
+	"\tresult_id\x18\x01 \x01(\x04R\bresultId\x12\x1b\n" +
+	"\trow_count\x18\x02 \x01(\x04R\browCount\"r\n" +
+	"\fExecutionEnd\x12!\n" +
+	"\fresult_count\x18\x01 \x01(\x04R\vresultCount\x12?\n" +
+	"\vtransaction\x18\x02 \x01(\v2\x1d.kubling.v1.TransactionStatusR\vtransaction\"@\n" +
 	"\x17BeginTransactionRequest\x12%\n" +
-	"\x0eexpiring_token\x18\x01 \x01(\tR\rexpiringToken\"\x1a\n" +
-	"\x18BeginTransactionResponse\"A\n" +
+	"\x0eexpiring_token\x18\x01 \x01(\tR\rexpiringToken\"s\n" +
+	"\x18BeginTransactionResponse\x12%\n" +
+	"\x0etransaction_id\x18\x01 \x01(\tR\rtransactionId\x120\n" +
+	"\baffinity\x18\x02 \x01(\v2\x14.kubling.v1.AffinityR\baffinity\"h\n" +
 	"\x18CommitTransactionRequest\x12%\n" +
-	"\x0eexpiring_token\x18\x01 \x01(\tR\rexpiringToken\"5\n" +
+	"\x0eexpiring_token\x18\x01 \x01(\tR\rexpiringToken\x12%\n" +
+	"\x0etransaction_id\x18\x02 \x01(\tR\rtransactionId\"v\n" +
 	"\x19CommitTransactionResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"C\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12?\n" +
+	"\vtransaction\x18\x02 \x01(\v2\x1d.kubling.v1.TransactionStatusR\vtransaction\"j\n" +
 	"\x1aRollbackTransactionRequest\x12%\n" +
-	"\x0eexpiring_token\x18\x01 \x01(\tR\rexpiringToken\"7\n" +
+	"\x0eexpiring_token\x18\x01 \x01(\tR\rexpiringToken\x12%\n" +
+	"\x0etransaction_id\x18\x02 \x01(\tR\rtransactionId\"x\n" +
 	"\x1bRollbackTransactionResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"?\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12?\n" +
+	"\vtransaction\x18\x02 \x01(\v2\x1d.kubling.v1.TransactionStatusR\vtransaction\"?\n" +
 	"\x16IsInTransactionRequest\x12%\n" +
-	"\x0eexpiring_token\x18\x01 \x01(\tR\rexpiringToken\"1\n" +
+	"\x0eexpiring_token\x18\x01 \x01(\tR\rexpiringToken\"r\n" +
 	"\x17IsInTransactionResponse\x12\x16\n" +
-	"\x06active\x18\x01 \x01(\bR\x06active\"\x16\n" +
-	"\x14GetServerInfoRequest\"Z\n" +
+	"\x06active\x18\x01 \x01(\bR\x06active\x12?\n" +
+	"\vtransaction\x18\x02 \x01(\v2\x1d.kubling.v1.TransactionStatusR\vtransaction\"k\n" +
+	"\x1bGetTransactionStatusRequest\x12%\n" +
+	"\x0eexpiring_token\x18\x01 \x01(\tR\rexpiringToken\x12%\n" +
+	"\x0etransaction_id\x18\x02 \x01(\tR\rtransactionId\"_\n" +
+	"\x1cGetTransactionStatusResponse\x12?\n" +
+	"\vtransaction\x18\x01 \x01(\v2\x1d.kubling.v1.TransactionStatusR\vtransaction\"=\n" +
+	"\x14GetServerInfoRequest\x12%\n" +
+	"\x0eexpiring_token\x18\x01 \x01(\tR\rexpiringToken\"\x98\x01\n" +
 	"\x15GetServerInfoResponse\x12%\n" +
 	"\x0eserver_version\x18\x01 \x01(\tR\rserverVersion\x12\x1a\n" +
-	"\bfeatures\x18\x02 \x03(\tR\bfeatures2\x9a\x02\n" +
+	"\bfeatures\x18\x02 \x03(\tR\bfeatures\x12<\n" +
+	"\fcapabilities\x18\x03 \x01(\v2\x18.kubling.v1.CapabilitiesR\fcapabilities*o\n" +
+	"\rResultSetRole\x12\x1f\n" +
+	"\x1bRESULT_SET_ROLE_UNSPECIFIED\x10\x00\x12\x19\n" +
+	"\x15RESULT_SET_ROLE_QUERY\x10\x01\x12\"\n" +
+	"\x1eRESULT_SET_ROLE_GENERATED_KEYS\x10\x022\x9a\x02\n" +
 	"\x0eSessionService\x12<\n" +
 	"\x05Login\x12\x18.kubling.v1.LoginRequest\x1a\x19.kubling.v1.LoginResponse\x12?\n" +
 	"\x06Logout\x12\x19.kubling.v1.LogoutRequest\x1a\x1a.kubling.v1.LogoutResponse\x129\n" +
 	"\x04Ping\x12\x17.kubling.v1.PingRequest\x1a\x18.kubling.v1.PingResponse\x12N\n" +
-	"\vPingSession\x12\x1e.kubling.v1.SessionPingRequest\x1a\x1f.kubling.v1.SessionPingResponse2\xe1\x04\n" +
+	"\vPingSession\x12\x1e.kubling.v1.SessionPingRequest\x1a\x1f.kubling.v1.SessionPingResponse2\x92\x06\n" +
 	"\fQueryService\x129\n" +
 	"\x04Exec\x12\x17.kubling.v1.ExecRequest\x1a\x18.kubling.v1.ExecResponse\x12;\n" +
-	"\x05Query\x12\x18.kubling.v1.QueryRequest\x1a\x16.kubling.v1.QueryBatch0\x01\x12]\n" +
+	"\x05Query\x12\x18.kubling.v1.QueryRequest\x1a\x16.kubling.v1.QueryBatch0\x01\x12D\n" +
+	"\aExecute\x12\x1a.kubling.v1.ExecuteRequest\x1a\x1b.kubling.v1.ExecuteResponse0\x01\x12]\n" +
 	"\x10BeginTransaction\x12#.kubling.v1.BeginTransactionRequest\x1a$.kubling.v1.BeginTransactionResponse\x12`\n" +
 	"\x11CommitTransaction\x12$.kubling.v1.CommitTransactionRequest\x1a%.kubling.v1.CommitTransactionResponse\x12f\n" +
 	"\x13RollbackTransaction\x12&.kubling.v1.RollbackTransactionRequest\x1a'.kubling.v1.RollbackTransactionResponse\x12Z\n" +
-	"\x0fIsInTransaction\x12\".kubling.v1.IsInTransactionRequest\x1a#.kubling.v1.IsInTransactionResponse\x12T\n" +
+	"\x0fIsInTransaction\x12\".kubling.v1.IsInTransactionRequest\x1a#.kubling.v1.IsInTransactionResponse\x12i\n" +
+	"\x14GetTransactionStatus\x12'.kubling.v1.GetTransactionStatusRequest\x1a(.kubling.v1.GetTransactionStatusResponse\x12T\n" +
 	"\rGetServerInfo\x12 .kubling.v1.GetServerInfoRequest\x1a!.kubling.v1.GetServerInfoResponseBs\n" +
-	"\x1acom.kubling.transport.grpcB\fCommandProtoP\x01ZEgithub.com/kubling-community/kubling-grpc/sdk-go/kubling/v1;kublingv1P\x00b\x06proto3"
+	"\x1acom.kubling.transport.grpcB\fCommandProtoP\x01ZEgithub.com/kubling-community/kubling-grpc/sdk-go/kubling/v1;kublingv1P\x02b\x06proto3"
 
 var (
 	file_kubling_v1_command_proto_rawDescOnce sync.Once
@@ -1500,74 +2485,116 @@ func file_kubling_v1_command_proto_rawDescGZIP() []byte {
 	return file_kubling_v1_command_proto_rawDescData
 }
 
-var file_kubling_v1_command_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
+var file_kubling_v1_command_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_kubling_v1_command_proto_msgTypes = make([]protoimpl.MessageInfo, 38)
 var file_kubling_v1_command_proto_goTypes = []any{
-	(*LoginRequest)(nil),                // 0: kubling.v1.LoginRequest
-	(*LoginResponse)(nil),               // 1: kubling.v1.LoginResponse
-	(*LogoutRequest)(nil),               // 2: kubling.v1.LogoutRequest
-	(*LogoutResponse)(nil),              // 3: kubling.v1.LogoutResponse
-	(*PingRequest)(nil),                 // 4: kubling.v1.PingRequest
-	(*PingResponse)(nil),                // 5: kubling.v1.PingResponse
-	(*SessionPingRequest)(nil),          // 6: kubling.v1.SessionPingRequest
-	(*SessionPingResponse)(nil),         // 7: kubling.v1.SessionPingResponse
-	(*Parameter)(nil),                   // 8: kubling.v1.Parameter
-	(*ExecRequest)(nil),                 // 9: kubling.v1.ExecRequest
-	(*ExecResponse)(nil),                // 10: kubling.v1.ExecResponse
-	(*QueryRequest)(nil),                // 11: kubling.v1.QueryRequest
-	(*Column)(nil),                      // 12: kubling.v1.Column
-	(*Row)(nil),                         // 13: kubling.v1.Row
-	(*QueryBatch)(nil),                  // 14: kubling.v1.QueryBatch
-	(*BeginTransactionRequest)(nil),     // 15: kubling.v1.BeginTransactionRequest
-	(*BeginTransactionResponse)(nil),    // 16: kubling.v1.BeginTransactionResponse
-	(*CommitTransactionRequest)(nil),    // 17: kubling.v1.CommitTransactionRequest
-	(*CommitTransactionResponse)(nil),   // 18: kubling.v1.CommitTransactionResponse
-	(*RollbackTransactionRequest)(nil),  // 19: kubling.v1.RollbackTransactionRequest
-	(*RollbackTransactionResponse)(nil), // 20: kubling.v1.RollbackTransactionResponse
-	(*IsInTransactionRequest)(nil),      // 21: kubling.v1.IsInTransactionRequest
-	(*IsInTransactionResponse)(nil),     // 22: kubling.v1.IsInTransactionResponse
-	(*GetServerInfoRequest)(nil),        // 23: kubling.v1.GetServerInfoRequest
-	(*GetServerInfoResponse)(nil),       // 24: kubling.v1.GetServerInfoResponse
-	nil,                                 // 25: kubling.v1.LoginRequest.PropertiesEntry
-	nil,                                 // 26: kubling.v1.LoginResponse.PropertiesEntry
-	(*Value)(nil),                       // 27: kubling.v1.Value
+	(ResultSetRole)(0),                   // 0: kubling.v1.ResultSetRole
+	(*LoginRequest)(nil),                 // 1: kubling.v1.LoginRequest
+	(*LoginResponse)(nil),                // 2: kubling.v1.LoginResponse
+	(*LogoutRequest)(nil),                // 3: kubling.v1.LogoutRequest
+	(*LogoutResponse)(nil),               // 4: kubling.v1.LogoutResponse
+	(*PingRequest)(nil),                  // 5: kubling.v1.PingRequest
+	(*PingResponse)(nil),                 // 6: kubling.v1.PingResponse
+	(*SessionPingRequest)(nil),           // 7: kubling.v1.SessionPingRequest
+	(*SessionPingResponse)(nil),          // 8: kubling.v1.SessionPingResponse
+	(*Parameter)(nil),                    // 9: kubling.v1.Parameter
+	(*ExecRequest)(nil),                  // 10: kubling.v1.ExecRequest
+	(*ExecResponse)(nil),                 // 11: kubling.v1.ExecResponse
+	(*QueryRequest)(nil),                 // 12: kubling.v1.QueryRequest
+	(*Column)(nil),                       // 13: kubling.v1.Column
+	(*Row)(nil),                          // 14: kubling.v1.Row
+	(*QueryBatch)(nil),                   // 15: kubling.v1.QueryBatch
+	(*ExecuteRequest)(nil),               // 16: kubling.v1.ExecuteRequest
+	(*ExecuteResponse)(nil),              // 17: kubling.v1.ExecuteResponse
+	(*ResultSetStart)(nil),               // 18: kubling.v1.ResultSetStart
+	(*ResultRows)(nil),                   // 19: kubling.v1.ResultRows
+	(*UnknownUpdateCount)(nil),           // 20: kubling.v1.UnknownUpdateCount
+	(*UpdateCount)(nil),                  // 21: kubling.v1.UpdateCount
+	(*UpdateResult)(nil),                 // 22: kubling.v1.UpdateResult
+	(*ResultSetEnd)(nil),                 // 23: kubling.v1.ResultSetEnd
+	(*ExecutionEnd)(nil),                 // 24: kubling.v1.ExecutionEnd
+	(*BeginTransactionRequest)(nil),      // 25: kubling.v1.BeginTransactionRequest
+	(*BeginTransactionResponse)(nil),     // 26: kubling.v1.BeginTransactionResponse
+	(*CommitTransactionRequest)(nil),     // 27: kubling.v1.CommitTransactionRequest
+	(*CommitTransactionResponse)(nil),    // 28: kubling.v1.CommitTransactionResponse
+	(*RollbackTransactionRequest)(nil),   // 29: kubling.v1.RollbackTransactionRequest
+	(*RollbackTransactionResponse)(nil),  // 30: kubling.v1.RollbackTransactionResponse
+	(*IsInTransactionRequest)(nil),       // 31: kubling.v1.IsInTransactionRequest
+	(*IsInTransactionResponse)(nil),      // 32: kubling.v1.IsInTransactionResponse
+	(*GetTransactionStatusRequest)(nil),  // 33: kubling.v1.GetTransactionStatusRequest
+	(*GetTransactionStatusResponse)(nil), // 34: kubling.v1.GetTransactionStatusResponse
+	(*GetServerInfoRequest)(nil),         // 35: kubling.v1.GetServerInfoRequest
+	(*GetServerInfoResponse)(nil),        // 36: kubling.v1.GetServerInfoResponse
+	nil,                                  // 37: kubling.v1.LoginRequest.PropertiesEntry
+	nil,                                  // 38: kubling.v1.LoginResponse.PropertiesEntry
+	(*Affinity)(nil),                     // 39: kubling.v1.Affinity
+	(*Value)(nil),                        // 40: kubling.v1.Value
+	(*TypeDescriptor)(nil),               // 41: kubling.v1.TypeDescriptor
+	(*TransactionStatus)(nil),            // 42: kubling.v1.TransactionStatus
+	(*Capabilities)(nil),                 // 43: kubling.v1.Capabilities
 }
 var file_kubling_v1_command_proto_depIdxs = []int32{
-	25, // 0: kubling.v1.LoginRequest.properties:type_name -> kubling.v1.LoginRequest.PropertiesEntry
-	26, // 1: kubling.v1.LoginResponse.properties:type_name -> kubling.v1.LoginResponse.PropertiesEntry
-	27, // 2: kubling.v1.Parameter.value:type_name -> kubling.v1.Value
-	8,  // 3: kubling.v1.ExecRequest.params:type_name -> kubling.v1.Parameter
-	14, // 4: kubling.v1.ExecResponse.generated_keys:type_name -> kubling.v1.QueryBatch
-	8,  // 5: kubling.v1.QueryRequest.params:type_name -> kubling.v1.Parameter
-	27, // 6: kubling.v1.Row.values:type_name -> kubling.v1.Value
-	12, // 7: kubling.v1.QueryBatch.columns:type_name -> kubling.v1.Column
-	13, // 8: kubling.v1.QueryBatch.rows:type_name -> kubling.v1.Row
-	0,  // 9: kubling.v1.SessionService.Login:input_type -> kubling.v1.LoginRequest
-	2,  // 10: kubling.v1.SessionService.Logout:input_type -> kubling.v1.LogoutRequest
-	4,  // 11: kubling.v1.SessionService.Ping:input_type -> kubling.v1.PingRequest
-	6,  // 12: kubling.v1.SessionService.PingSession:input_type -> kubling.v1.SessionPingRequest
-	9,  // 13: kubling.v1.QueryService.Exec:input_type -> kubling.v1.ExecRequest
-	11, // 14: kubling.v1.QueryService.Query:input_type -> kubling.v1.QueryRequest
-	15, // 15: kubling.v1.QueryService.BeginTransaction:input_type -> kubling.v1.BeginTransactionRequest
-	17, // 16: kubling.v1.QueryService.CommitTransaction:input_type -> kubling.v1.CommitTransactionRequest
-	19, // 17: kubling.v1.QueryService.RollbackTransaction:input_type -> kubling.v1.RollbackTransactionRequest
-	21, // 18: kubling.v1.QueryService.IsInTransaction:input_type -> kubling.v1.IsInTransactionRequest
-	23, // 19: kubling.v1.QueryService.GetServerInfo:input_type -> kubling.v1.GetServerInfoRequest
-	1,  // 20: kubling.v1.SessionService.Login:output_type -> kubling.v1.LoginResponse
-	3,  // 21: kubling.v1.SessionService.Logout:output_type -> kubling.v1.LogoutResponse
-	5,  // 22: kubling.v1.SessionService.Ping:output_type -> kubling.v1.PingResponse
-	7,  // 23: kubling.v1.SessionService.PingSession:output_type -> kubling.v1.SessionPingResponse
-	10, // 24: kubling.v1.QueryService.Exec:output_type -> kubling.v1.ExecResponse
-	14, // 25: kubling.v1.QueryService.Query:output_type -> kubling.v1.QueryBatch
-	16, // 26: kubling.v1.QueryService.BeginTransaction:output_type -> kubling.v1.BeginTransactionResponse
-	18, // 27: kubling.v1.QueryService.CommitTransaction:output_type -> kubling.v1.CommitTransactionResponse
-	20, // 28: kubling.v1.QueryService.RollbackTransaction:output_type -> kubling.v1.RollbackTransactionResponse
-	22, // 29: kubling.v1.QueryService.IsInTransaction:output_type -> kubling.v1.IsInTransactionResponse
-	24, // 30: kubling.v1.QueryService.GetServerInfo:output_type -> kubling.v1.GetServerInfoResponse
-	20, // [20:31] is the sub-list for method output_type
-	9,  // [9:20] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	37, // 0: kubling.v1.LoginRequest.properties:type_name -> kubling.v1.LoginRequest.PropertiesEntry
+	38, // 1: kubling.v1.LoginResponse.properties:type_name -> kubling.v1.LoginResponse.PropertiesEntry
+	39, // 2: kubling.v1.LoginResponse.affinity:type_name -> kubling.v1.Affinity
+	40, // 3: kubling.v1.Parameter.value:type_name -> kubling.v1.Value
+	41, // 4: kubling.v1.Parameter.declared_type:type_name -> kubling.v1.TypeDescriptor
+	9,  // 5: kubling.v1.ExecRequest.params:type_name -> kubling.v1.Parameter
+	15, // 6: kubling.v1.ExecResponse.generated_keys:type_name -> kubling.v1.QueryBatch
+	9,  // 7: kubling.v1.QueryRequest.params:type_name -> kubling.v1.Parameter
+	41, // 8: kubling.v1.Column.declared_type:type_name -> kubling.v1.TypeDescriptor
+	40, // 9: kubling.v1.Row.values:type_name -> kubling.v1.Value
+	13, // 10: kubling.v1.QueryBatch.columns:type_name -> kubling.v1.Column
+	14, // 11: kubling.v1.QueryBatch.rows:type_name -> kubling.v1.Row
+	9,  // 12: kubling.v1.ExecuteRequest.params:type_name -> kubling.v1.Parameter
+	18, // 13: kubling.v1.ExecuteResponse.result_set_start:type_name -> kubling.v1.ResultSetStart
+	19, // 14: kubling.v1.ExecuteResponse.result_rows:type_name -> kubling.v1.ResultRows
+	22, // 15: kubling.v1.ExecuteResponse.update_result:type_name -> kubling.v1.UpdateResult
+	23, // 16: kubling.v1.ExecuteResponse.result_set_end:type_name -> kubling.v1.ResultSetEnd
+	24, // 17: kubling.v1.ExecuteResponse.execution_end:type_name -> kubling.v1.ExecutionEnd
+	13, // 18: kubling.v1.ResultSetStart.columns:type_name -> kubling.v1.Column
+	0,  // 19: kubling.v1.ResultSetStart.role:type_name -> kubling.v1.ResultSetRole
+	14, // 20: kubling.v1.ResultRows.rows:type_name -> kubling.v1.Row
+	20, // 21: kubling.v1.UpdateCount.unknown:type_name -> kubling.v1.UnknownUpdateCount
+	21, // 22: kubling.v1.UpdateResult.counts:type_name -> kubling.v1.UpdateCount
+	42, // 23: kubling.v1.ExecutionEnd.transaction:type_name -> kubling.v1.TransactionStatus
+	39, // 24: kubling.v1.BeginTransactionResponse.affinity:type_name -> kubling.v1.Affinity
+	42, // 25: kubling.v1.CommitTransactionResponse.transaction:type_name -> kubling.v1.TransactionStatus
+	42, // 26: kubling.v1.RollbackTransactionResponse.transaction:type_name -> kubling.v1.TransactionStatus
+	42, // 27: kubling.v1.IsInTransactionResponse.transaction:type_name -> kubling.v1.TransactionStatus
+	42, // 28: kubling.v1.GetTransactionStatusResponse.transaction:type_name -> kubling.v1.TransactionStatus
+	43, // 29: kubling.v1.GetServerInfoResponse.capabilities:type_name -> kubling.v1.Capabilities
+	1,  // 30: kubling.v1.SessionService.Login:input_type -> kubling.v1.LoginRequest
+	3,  // 31: kubling.v1.SessionService.Logout:input_type -> kubling.v1.LogoutRequest
+	5,  // 32: kubling.v1.SessionService.Ping:input_type -> kubling.v1.PingRequest
+	7,  // 33: kubling.v1.SessionService.PingSession:input_type -> kubling.v1.SessionPingRequest
+	10, // 34: kubling.v1.QueryService.Exec:input_type -> kubling.v1.ExecRequest
+	12, // 35: kubling.v1.QueryService.Query:input_type -> kubling.v1.QueryRequest
+	16, // 36: kubling.v1.QueryService.Execute:input_type -> kubling.v1.ExecuteRequest
+	25, // 37: kubling.v1.QueryService.BeginTransaction:input_type -> kubling.v1.BeginTransactionRequest
+	27, // 38: kubling.v1.QueryService.CommitTransaction:input_type -> kubling.v1.CommitTransactionRequest
+	29, // 39: kubling.v1.QueryService.RollbackTransaction:input_type -> kubling.v1.RollbackTransactionRequest
+	31, // 40: kubling.v1.QueryService.IsInTransaction:input_type -> kubling.v1.IsInTransactionRequest
+	33, // 41: kubling.v1.QueryService.GetTransactionStatus:input_type -> kubling.v1.GetTransactionStatusRequest
+	35, // 42: kubling.v1.QueryService.GetServerInfo:input_type -> kubling.v1.GetServerInfoRequest
+	2,  // 43: kubling.v1.SessionService.Login:output_type -> kubling.v1.LoginResponse
+	4,  // 44: kubling.v1.SessionService.Logout:output_type -> kubling.v1.LogoutResponse
+	6,  // 45: kubling.v1.SessionService.Ping:output_type -> kubling.v1.PingResponse
+	8,  // 46: kubling.v1.SessionService.PingSession:output_type -> kubling.v1.SessionPingResponse
+	11, // 47: kubling.v1.QueryService.Exec:output_type -> kubling.v1.ExecResponse
+	15, // 48: kubling.v1.QueryService.Query:output_type -> kubling.v1.QueryBatch
+	17, // 49: kubling.v1.QueryService.Execute:output_type -> kubling.v1.ExecuteResponse
+	26, // 50: kubling.v1.QueryService.BeginTransaction:output_type -> kubling.v1.BeginTransactionResponse
+	28, // 51: kubling.v1.QueryService.CommitTransaction:output_type -> kubling.v1.CommitTransactionResponse
+	30, // 52: kubling.v1.QueryService.RollbackTransaction:output_type -> kubling.v1.RollbackTransactionResponse
+	32, // 53: kubling.v1.QueryService.IsInTransaction:output_type -> kubling.v1.IsInTransactionResponse
+	34, // 54: kubling.v1.QueryService.GetTransactionStatus:output_type -> kubling.v1.GetTransactionStatusResponse
+	36, // 55: kubling.v1.QueryService.GetServerInfo:output_type -> kubling.v1.GetServerInfoResponse
+	43, // [43:56] is the sub-list for method output_type
+	30, // [30:43] is the sub-list for method input_type
+	30, // [30:30] is the sub-list for extension type_name
+	30, // [30:30] is the sub-list for extension extendee
+	0,  // [0:30] is the sub-list for field type_name
 }
 
 func init() { file_kubling_v1_command_proto_init() }
@@ -1575,20 +2602,35 @@ func file_kubling_v1_command_proto_init() {
 	if File_kubling_v1_command_proto != nil {
 		return
 	}
+	file_kubling_v1_capability_proto_init()
+	file_kubling_v1_transaction_proto_init()
 	file_kubling_v1_value_proto_init()
 	file_kubling_v1_command_proto_msgTypes[10].OneofWrappers = []any{}
+	file_kubling_v1_command_proto_msgTypes[16].OneofWrappers = []any{
+		(*ExecuteResponse_ResultSetStart)(nil),
+		(*ExecuteResponse_ResultRows)(nil),
+		(*ExecuteResponse_UpdateResult)(nil),
+		(*ExecuteResponse_ResultSetEnd)(nil),
+		(*ExecuteResponse_ExecutionEnd)(nil),
+	}
+	file_kubling_v1_command_proto_msgTypes[17].OneofWrappers = []any{}
+	file_kubling_v1_command_proto_msgTypes[20].OneofWrappers = []any{
+		(*UpdateCount_AffectedRows)(nil),
+		(*UpdateCount_Unknown)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_kubling_v1_command_proto_rawDesc), len(file_kubling_v1_command_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   27,
+			NumEnums:      1,
+			NumMessages:   38,
 			NumExtensions: 0,
 			NumServices:   2,
 		},
 		GoTypes:           file_kubling_v1_command_proto_goTypes,
 		DependencyIndexes: file_kubling_v1_command_proto_depIdxs,
+		EnumInfos:         file_kubling_v1_command_proto_enumTypes,
 		MessageInfos:      file_kubling_v1_command_proto_msgTypes,
 	}.Build()
 	File_kubling_v1_command_proto = out.File

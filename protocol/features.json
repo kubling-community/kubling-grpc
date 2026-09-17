@@ -1,0 +1,271 @@
+{
+  "schema_version": 2,
+  "features": [
+    {
+      "name": "generic_execute_v1",
+      "symbol": "GenericExecuteV1",
+      "requires": [],
+      "description": "Execute event stream and authenticated, session-bound capabilities with enforced limits.",
+      "activation": {
+        "request": {
+          "rpc": "/kubling.v1.QueryService/Execute"
+        },
+        "request_requires_acceptance": false,
+        "response": {
+          "rpc": "/kubling.v1.QueryService/Execute"
+        }
+      }
+    },
+    {
+      "name": "typed_parameters_v1",
+      "symbol": "TypedParametersV1",
+      "requires": [],
+      "description": "Parameter.declared_type is honored and validated, including typed null.",
+      "activation": {
+        "request": {
+          "field": "kubling.v1.Parameter.declared_type",
+          "test": "present"
+        },
+        "request_requires_acceptance": false,
+        "response": null
+      }
+    },
+    {
+      "name": "structured_errors_v1",
+      "symbol": "StructuredErrorsV1",
+      "requires": [],
+      "description": "Application errors carry KublingError in google.rpc.Status.details.",
+      "activation": {
+        "request": null,
+        "request_requires_acceptance": false,
+        "response": {
+          "advertised": true
+        }
+      }
+    },
+    {
+      "name": "transaction_ids_v1",
+      "symbol": "TransactionIdsV1",
+      "requires": [],
+      "description": "Begin returns opaque IDs; SQL/commit/rollback validate explicitly supplied IDs.",
+      "activation": {
+        "request": {
+          "any_of": [
+            {
+              "field": "kubling.v1.ExecuteRequest.transaction_id",
+              "test": "nonempty"
+            },
+            {
+              "field": "kubling.v1.QueryRequest.transaction_id",
+              "test": "nonempty"
+            },
+            {
+              "field": "kubling.v1.ExecRequest.transaction_id",
+              "test": "nonempty"
+            },
+            {
+              "field": "kubling.v1.CommitTransactionRequest.transaction_id",
+              "test": "nonempty"
+            },
+            {
+              "field": "kubling.v1.RollbackTransactionRequest.transaction_id",
+              "test": "nonempty"
+            },
+            {
+              "field": "kubling.v1.GetTransactionStatusRequest.transaction_id",
+              "test": "nonempty"
+            }
+          ]
+        },
+        "request_requires_acceptance": false,
+        "response": {
+          "advertised": true
+        }
+      }
+    },
+    {
+      "name": "transaction_status_v1",
+      "symbol": "TransactionStatusV1",
+      "requires": [
+        "transaction_ids_v1"
+      ],
+      "description": "GetTransactionStatus reports authoritative observations or UNKNOWN with declared retention.",
+      "activation": {
+        "request": {
+          "rpc": "/kubling.v1.QueryService/GetTransactionStatus"
+        },
+        "request_requires_acceptance": false,
+        "response": {
+          "advertised": true
+        }
+      }
+    },
+    {
+      "name": "array_values_v1",
+      "symbol": "ArrayValuesV1",
+      "requires": [
+        "generic_execute_v1"
+      ],
+      "description": "Execute accepts negotiated arrays with recursive element descriptors and enforced depth limits.",
+      "activation": {
+        "request": {
+          "field": "kubling.v1.Value.array_value",
+          "test": "present"
+        },
+        "request_requires_acceptance": false,
+        "response": {
+          "all_of": [
+            {
+              "rpc": "/kubling.v1.QueryService/Execute"
+            },
+            {
+              "accepted_features": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "spatial_values_v1",
+      "symbol": "SpatialValuesV1",
+      "requires": [
+        "generic_execute_v1"
+      ],
+      "description": "Execute accepts negotiated WKB values with explicit SRID/CRS.",
+      "activation": {
+        "request": {
+          "any_of": [
+            {
+              "field": "kubling.v1.Value.geometry_with_crs",
+              "test": "present"
+            },
+            {
+              "field": "kubling.v1.Value.geography_with_crs",
+              "test": "present"
+            }
+          ]
+        },
+        "request_requires_acceptance": false,
+        "response": {
+          "all_of": [
+            {
+              "rpc": "/kubling.v1.QueryService/Execute"
+            },
+            {
+              "accepted_features": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "lob_read_v1",
+      "symbol": "LobReadV1",
+      "requires": [
+        "generic_execute_v1"
+      ],
+      "description": "Execute may return accepted session-scoped LOB references; ReadLob and ReleaseLob implement their lifecycle.",
+      "activation": {
+        "request": {
+          "any_of": [
+            {
+              "rpc": "/kubling.v1.LobService/ReadLob"
+            },
+            {
+              "rpc": "/kubling.v1.LobService/ReleaseLob"
+            }
+          ]
+        },
+        "request_requires_acceptance": false,
+        "response": {
+          "all_of": [
+            {
+              "rpc": "/kubling.v1.QueryService/Execute"
+            },
+            {
+              "accepted_features": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "lob_write_v1",
+      "symbol": "LobWriteV1",
+      "requires": [
+        "lob_read_v1"
+      ],
+      "description": "WriteLob uploads immutable LOBs and Execute accepts their references as input parameters.",
+      "activation": {
+        "request": {
+          "any_of": [
+            {
+              "rpc": "/kubling.v1.LobService/WriteLob"
+            },
+            {
+              "field": "kubling.v1.Value.lob_reference",
+              "test": "present"
+            }
+          ]
+        },
+        "request_requires_acceptance": false,
+        "response": {
+          "rpc": "/kubling.v1.LobService/WriteLob"
+        }
+      }
+    },
+    {
+      "name": "multiple_results_v1",
+      "symbol": "MultipleResultsV1",
+      "requires": [
+        "generic_execute_v1"
+      ],
+      "description": "Execute can emit multiple primary results in execution order when accepted by the client.",
+      "activation": {
+        "request": {
+          "accepted_features": true
+        },
+        "request_requires_acceptance": true,
+        "response": {
+          "all_of": [
+            {
+              "rpc": "/kubling.v1.QueryService/Execute"
+            },
+            {
+              "accepted_features": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "generated_keys_v1",
+      "symbol": "GeneratedKeysV1",
+      "requires": [
+        "generic_execute_v1"
+      ],
+      "description": "Execute honors return_generated_keys with associated, separately streamed schemas and rows.",
+      "activation": {
+        "request": {
+          "field": "kubling.v1.ExecuteRequest.return_generated_keys",
+          "test": "true"
+        },
+        "request_requires_acceptance": true,
+        "response": {
+          "all_of": [
+            {
+              "rpc": "/kubling.v1.QueryService/Execute"
+            },
+            {
+              "field": "kubling.v1.ExecuteRequest.return_generated_keys",
+              "test": "true"
+            },
+            {
+              "accepted_features": true
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

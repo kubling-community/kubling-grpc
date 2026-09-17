@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package kubling.v1;
 
+import "kubling/v1/capability.proto";
+import "kubling/v1/transaction.proto";
 // Preserves transitive access to value types previously declared in this file.
 // buf:lint:ignore IMPORT_NO_PUBLIC
 import public "kubling/v1/value.proto";
@@ -52,6 +54,8 @@ message LoginResponse {
   string timezone = 8;
 
   map<string, string> properties = 10;
+
+  Affinity affinity = 11;
 }
 
 message LogoutRequest {
@@ -93,6 +97,10 @@ service QueryService {
   // buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
   rpc Query(QueryRequest) returns (stream QueryBatch);
 
+  // Executes SQL once and reports its actual result kind. Requires
+  // generic_execute_v1; never probe statement kind by trying another SQL RPC.
+  rpc Execute(ExecuteRequest) returns (stream ExecuteResponse);
+
   // Starts a transaction and returns a transaction identifier.
   rpc BeginTransaction(BeginTransactionRequest) returns (BeginTransactionResponse);
 
@@ -103,6 +111,9 @@ service QueryService {
   rpc RollbackTransaction(RollbackTransactionRequest) returns (RollbackTransactionResponse);
 
   rpc IsInTransaction(IsInTransactionRequest) returns (IsInTransactionResponse);
+
+  // Optional authoritative observation, gated by transaction_status_v1.
+  rpc GetTransactionStatus(GetTransactionStatusRequest) returns (GetTransactionStatusResponse);
 
   // Returns server metadata and capabilities.
   rpc GetServerInfo(GetServerInfoRequest) returns (GetServerInfoResponse);
@@ -116,6 +127,10 @@ service QueryService {
 message Parameter {
   // Parameter value.
   Value value = 1;
+
+  // Absent preserves legacy inference, including legacy untyped null.
+  // Present requires typed_parameters_v1 and a value consistent with the type.
+  TypeDescriptor declared_type = 2;
 }
 
 // ============================================================================
@@ -139,6 +154,10 @@ message ExecRequest {
 
   // buf:lint:ignore FIELD_LOWER_SNAKE_CASE
   bool returnGeneratedKeys = 4;
+
+  // Optional assertion of the session's active transaction. Empty preserves
+  // legacy session semantics. Requires transaction_ids_v1 when non-empty.
+  string transaction_id = 5;
 }
 
 // SQL execution response.
@@ -170,6 +189,9 @@ message QueryRequest {
   //
   // The server may ignore or adjust this value.
   int32 batch_size = 5;
+
+  // Same semantics as ExecRequest.transaction_id.
+  string transaction_id = 6;
 }
 
 // Result column metadata.
@@ -185,6 +207,9 @@ message Column {
   int32 precision = 4;
 
   int32 scale = 5;
+
+  // Required in Execute schemas; legacy data_type remains unchanged.
+  TypeDescriptor declared_type = 6;
 }
 
 // Result row.
@@ -205,6 +230,95 @@ message QueryBatch {
 }
 
 // ============================================================================
+// Generic execution (generic_execute_v1)
+// ============================================================================
+
+message ExecuteRequest {
+  string expiring_token = 1;
+  string sql = 2;
+  repeated Parameter params = 3;
+  // Empty inherits the session's transaction semantics; non-empty asserts the
+  // active transaction's opaque ID and requires transaction_ids_v1.
+  string transaction_id = 4;
+  // Zero uses the server default; positive values are upper bounds, not hints.
+  uint32 batch_size = 5;
+  // Requires advertised AND accepted generated_keys_v1; checked before SQL.
+  bool return_generated_keys = 6;
+  // Obtained from authenticated GetServerInfo. Required and checked before SQL.
+  string capability_id = 7;
+  // Explicit opt-in to output representations/multiple results. Input variants
+  // and declared_type activate their features by presence, not by this list.
+  // See protocol/features.json. Unknown/unavailable features fail before SQL.
+  repeated string accepted_features = 8;
+}
+
+// Ordered event stream; see docs/client-contract-v1.md for the state machine.
+// Unknown/missing event alternatives are not successful or skippable results.
+message ExecuteResponse {
+  oneof event {
+    ResultSetStart result_set_start = 1;
+    ResultRows result_rows = 2;
+    UpdateResult update_result = 3;
+    ResultSetEnd result_set_end = 4;
+    ExecutionEnd execution_end = 5;
+  }
+}
+
+enum ResultSetRole {
+  RESULT_SET_ROLE_UNSPECIFIED = 0;
+  RESULT_SET_ROLE_QUERY = 1;
+  RESULT_SET_ROLE_GENERATED_KEYS = 2;
+}
+
+message ResultSetStart {
+  // Consecutive IDs starting at 1, including update results and generated keys.
+  uint64 result_id = 1;
+  repeated Column columns = 2;
+  ResultSetRole role = 3;
+  // Present only for generated keys; identifies the preceding UpdateResult.
+  optional uint64 parent_result_id = 4;
+}
+
+message ResultRows {
+  uint64 result_id = 1;
+  repeated Row rows = 2;
+}
+
+message UnknownUpdateCount {}
+
+// Zero affected rows is a known count, distinct from an unknown count.
+message UpdateCount {
+  oneof value {
+    uint64 affected_rows = 1;
+    UnknownUpdateCount unknown = 2;
+  }
+}
+
+// Complete update result. Counts preserve engine order and are non-empty.
+// This message does not introduce batch SQL submission or atomicity guarantees.
+// DDL, SET and other commands without a natural row set also use UpdateResult;
+// if no reliable count exists, use UnknownUpdateCount rather than inventing zero.
+message UpdateResult {
+  uint64 result_id = 1;
+  repeated UpdateCount counts = 2;
+}
+
+message ResultSetEnd {
+  uint64 result_id = 1;
+  uint64 row_count = 2;
+}
+
+// Exactly once on success, after all results. Successful completion also
+// requires final gRPC OK; a broken stream must not be treated as success.
+// Successful autocommit reports NONE with an empty transaction ID. Cancellation
+// or error emits no ExecutionEnd; propagate cancellation and close execution
+// resources. A race after completion may still lose the final transport status.
+message ExecutionEnd {
+  uint64 result_count = 1;
+  TransactionStatus transaction = 2;
+}
+
+// ============================================================================
 // Transactions
 // ============================================================================
 
@@ -214,26 +328,38 @@ message BeginTransactionRequest {
 }
 
 // Transaction start response.
-message BeginTransactionResponse {}
+message BeginTransactionResponse {
+  // Returned when transaction_ids_v1 is supported. IDs are never reused.
+  string transaction_id = 1;
+  Affinity affinity = 2;
+}
 
 // Transaction commit request.
 message CommitTransactionRequest {
   string expiring_token = 1;
+  // Empty preserves legacy behavior. A non-empty stale ID must fail before
+  // committing anything, even if a different transaction is now active.
+  string transaction_id = 2;
 }
 
 // Transaction commit response.
 message CommitTransactionResponse {
   bool success = 1;
+  TransactionStatus transaction = 2;
 }
 
 // Transaction rollback request.
 message RollbackTransactionRequest {
   string expiring_token = 1;
+  string transaction_id = 2;
 }
 
 // Transaction rollback response.
 message RollbackTransactionResponse {
+  // No active transaction: successful idempotent no-op, NONE with empty ID.
+  // This does not establish the outcome of a historical explicit request ID.
   bool success = 1;
+  TransactionStatus transaction = 2;
 }
 
 message IsInTransactionRequest {
@@ -242,6 +368,18 @@ message IsInTransactionRequest {
 
 message IsInTransactionResponse {
   bool active = 1;
+  // Optional additional observation. active=false alone proves no outcome.
+  TransactionStatus transaction = 2;
+}
+
+message GetTransactionStatusRequest {
+  string expiring_token = 1;
+  // Required non-empty ID; unknown/expired lookups preserve it in UNKNOWN.
+  string transaction_id = 2;
+}
+
+message GetTransactionStatusResponse {
+  TransactionStatus transaction = 1;
 }
 
 // ============================================================================
@@ -249,7 +387,11 @@ message IsInTransactionResponse {
 // ============================================================================
 
 // Server metadata request.
-message GetServerInfoRequest {}
+message GetServerInfoRequest {
+  // Empty preserves legacy product information. Effective new capabilities
+  // require an authenticated session and must describe its VDB and node.
+  string expiring_token = 1;
+}
 
 // Server metadata response.
 message GetServerInfoResponse {
@@ -261,4 +403,6 @@ message GetServerInfoResponse {
 
   // Supported optional or configured features.
   repeated string features = 2;
+
+  Capabilities capabilities = 3;
 }

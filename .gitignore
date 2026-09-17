@@ -9,3 +9,19 @@ sdk-java/generated
 sdk-python/generated
 .idea/
 kubling-grpc.iml
+
+# Local work notes are not part of the public project.
+.local-notes/
+
+# SDK build outputs (Go generated sources remain versioned).
+sdk-java/target/
+sdk-java/features/
+sdk-python/features/
+sdk-python/build/
+sdk-python/dist/
+sdk-python/LICENSE
+*.egg-info/
+__pycache__/
+*.py[cod]
+.venv/
+/.mvn/wrapper/maven-wrapper.jar

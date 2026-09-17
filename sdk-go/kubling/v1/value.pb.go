@@ -76,6 +76,8 @@ const (
 	ValueType_VALUE_TYPE_JSON ValueType = 20
 	// XML document.
 	ValueType_VALUE_TYPE_XML ValueType = 21
+	// Homogeneous array; element type is carried by TypeDescriptor/ArrayValue.
+	ValueType_VALUE_TYPE_ARRAY ValueType = 22
 )
 
 // Enum value maps for ValueType.
@@ -103,6 +105,7 @@ var (
 		19: "VALUE_TYPE_GEOGRAPHY",
 		20: "VALUE_TYPE_JSON",
 		21: "VALUE_TYPE_XML",
+		22: "VALUE_TYPE_ARRAY",
 	}
 	ValueType_value = map[string]int32{
 		"VALUE_TYPE_UNKNOWN":    0,
@@ -127,6 +130,7 @@ var (
 		"VALUE_TYPE_GEOGRAPHY":  19,
 		"VALUE_TYPE_JSON":       20,
 		"VALUE_TYPE_XML":        21,
+		"VALUE_TYPE_ARRAY":      22,
 	}
 )
 
@@ -157,6 +161,80 @@ func (ValueType) EnumDescriptor() ([]byte, []int) {
 	return file_kubling_v1_value_proto_rawDescGZIP(), []int{0}
 }
 
+// Portable declared type. Message presence distinguishes inferred from declared
+// parameter types. UNKNOWN is not a valid explicitly declared type.
+// precision is positive and allowed only for BIGINTEGER/BIGDECIMAL. scale is
+// allowed only for BIGDECIMAL, requires precision, and must be <= precision.
+// Negative decimal scales are supported. All other types omit both qualifiers.
+type TypeDescriptor struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Type  ValueType              `protobuf:"varint,1,opt,name=type,proto3,enum=kubling.v1.ValueType" json:"type,omitempty"`
+	// Required only for ARRAY. Recursive descriptors describe nested arrays.
+	ElementType   *TypeDescriptor `protobuf:"bytes,2,opt,name=element_type,json=elementType,proto3" json:"element_type,omitempty"`
+	Precision     *int32          `protobuf:"varint,3,opt,name=precision,proto3,oneof" json:"precision,omitempty"`
+	Scale         *int32          `protobuf:"varint,4,opt,name=scale,proto3,oneof" json:"scale,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TypeDescriptor) Reset() {
+	*x = TypeDescriptor{}
+	mi := &file_kubling_v1_value_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TypeDescriptor) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TypeDescriptor) ProtoMessage() {}
+
+func (x *TypeDescriptor) ProtoReflect() protoreflect.Message {
+	mi := &file_kubling_v1_value_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TypeDescriptor.ProtoReflect.Descriptor instead.
+func (*TypeDescriptor) Descriptor() ([]byte, []int) {
+	return file_kubling_v1_value_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *TypeDescriptor) GetType() ValueType {
+	if x != nil {
+		return x.Type
+	}
+	return ValueType_VALUE_TYPE_UNKNOWN
+}
+
+func (x *TypeDescriptor) GetElementType() *TypeDescriptor {
+	if x != nil {
+		return x.ElementType
+	}
+	return nil
+}
+
+func (x *TypeDescriptor) GetPrecision() int32 {
+	if x != nil && x.Precision != nil {
+		return *x.Precision
+	}
+	return 0
+}
+
+func (x *TypeDescriptor) GetScale() int32 {
+	if x != nil && x.Scale != nil {
+		return *x.Scale
+	}
+	return 0
+}
+
 // Explicit null representation.
 type NullValue struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -166,7 +244,7 @@ type NullValue struct {
 
 func (x *NullValue) Reset() {
 	*x = NullValue{}
-	mi := &file_kubling_v1_value_proto_msgTypes[0]
+	mi := &file_kubling_v1_value_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -178,7 +256,7 @@ func (x *NullValue) String() string {
 func (*NullValue) ProtoMessage() {}
 
 func (x *NullValue) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_value_proto_msgTypes[0]
+	mi := &file_kubling_v1_value_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -191,7 +269,7 @@ func (x *NullValue) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NullValue.ProtoReflect.Descriptor instead.
 func (*NullValue) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_value_proto_rawDescGZIP(), []int{0}
+	return file_kubling_v1_value_proto_rawDescGZIP(), []int{1}
 }
 
 // Generic typed value.
@@ -230,6 +308,10 @@ type Value struct {
 	//	*Value_GeometryValue
 	//	*Value_GeographyValue
 	//	*Value_JsonValue
+	//	*Value_ArrayValue
+	//	*Value_GeometryWithCrs
+	//	*Value_GeographyWithCrs
+	//	*Value_LobReference
 	Kind          isValue_Kind `protobuf_oneof:"kind"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -237,7 +319,7 @@ type Value struct {
 
 func (x *Value) Reset() {
 	*x = Value{}
-	mi := &file_kubling_v1_value_proto_msgTypes[1]
+	mi := &file_kubling_v1_value_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -249,7 +331,7 @@ func (x *Value) String() string {
 func (*Value) ProtoMessage() {}
 
 func (x *Value) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_value_proto_msgTypes[1]
+	mi := &file_kubling_v1_value_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -262,7 +344,7 @@ func (x *Value) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Value.ProtoReflect.Descriptor instead.
 func (*Value) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_value_proto_rawDescGZIP(), []int{1}
+	return file_kubling_v1_value_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Value) GetKind() isValue_Kind {
@@ -471,6 +553,42 @@ func (x *Value) GetJsonValue() string {
 	return ""
 }
 
+func (x *Value) GetArrayValue() *ArrayValue {
+	if x != nil {
+		if x, ok := x.Kind.(*Value_ArrayValue); ok {
+			return x.ArrayValue
+		}
+	}
+	return nil
+}
+
+func (x *Value) GetGeometryWithCrs() *SpatialValue {
+	if x != nil {
+		if x, ok := x.Kind.(*Value_GeometryWithCrs); ok {
+			return x.GeometryWithCrs
+		}
+	}
+	return nil
+}
+
+func (x *Value) GetGeographyWithCrs() *SpatialValue {
+	if x != nil {
+		if x, ok := x.Kind.(*Value_GeographyWithCrs); ok {
+			return x.GeographyWithCrs
+		}
+	}
+	return nil
+}
+
+func (x *Value) GetLobReference() *LobReference {
+	if x != nil {
+		if x, ok := x.Kind.(*Value_LobReference); ok {
+			return x.LobReference
+		}
+	}
+	return nil
+}
+
 type isValue_Kind interface {
 	isValue_Kind()
 }
@@ -564,6 +682,24 @@ type Value_JsonValue struct {
 	JsonValue string `protobuf:"bytes,22,opt,name=json_value,json=jsonValue,proto3,oneof"`
 }
 
+type Value_ArrayValue struct {
+	// Input variants activate their advertised feature by presence; output
+	// requires accepted_features. Legacy Query/Exec never emit these variants.
+	ArrayValue *ArrayValue `protobuf:"bytes,23,opt,name=array_value,json=arrayValue,proto3,oneof"`
+}
+
+type Value_GeometryWithCrs struct {
+	GeometryWithCrs *SpatialValue `protobuf:"bytes,24,opt,name=geometry_with_crs,json=geometryWithCrs,proto3,oneof"`
+}
+
+type Value_GeographyWithCrs struct {
+	GeographyWithCrs *SpatialValue `protobuf:"bytes,25,opt,name=geography_with_crs,json=geographyWithCrs,proto3,oneof"`
+}
+
+type Value_LobReference struct {
+	LobReference *LobReference `protobuf:"bytes,26,opt,name=lob_reference,json=lobReference,proto3,oneof"`
+}
+
 func (*Value_NullValue) isValue_Kind() {}
 
 func (*Value_StringValue) isValue_Kind() {}
@@ -608,6 +744,215 @@ func (*Value_GeographyValue) isValue_Kind() {}
 
 func (*Value_JsonValue) isValue_Kind() {}
 
+func (*Value_ArrayValue) isValue_Kind() {}
+
+func (*Value_GeometryWithCrs) isValue_Kind() {}
+
+func (*Value_GeographyWithCrs) isValue_Kind() {}
+
+func (*Value_LobReference) isValue_Kind() {}
+
+// Empty array is distinct from Value.null_value. Elements may be null, but all
+// non-null elements must match element_type. Ragged nested arrays are allowed.
+type ArrayValue struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ElementType   *TypeDescriptor        `protobuf:"bytes,1,opt,name=element_type,json=elementType,proto3" json:"element_type,omitempty"`
+	Elements      []*Value               `protobuf:"bytes,2,rep,name=elements,proto3" json:"elements,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ArrayValue) Reset() {
+	*x = ArrayValue{}
+	mi := &file_kubling_v1_value_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ArrayValue) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ArrayValue) ProtoMessage() {}
+
+func (x *ArrayValue) ProtoReflect() protoreflect.Message {
+	mi := &file_kubling_v1_value_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ArrayValue.ProtoReflect.Descriptor instead.
+func (*ArrayValue) Descriptor() ([]byte, []int) {
+	return file_kubling_v1_value_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ArrayValue) GetElementType() *TypeDescriptor {
+	if x != nil {
+		return x.ElementType
+	}
+	return nil
+}
+
+func (x *ArrayValue) GetElements() []*Value {
+	if x != nil {
+		return x.Elements
+	}
+	return nil
+}
+
+// Plain WKB; no embedded SRID. Missing CRS/SRID means unknown, never EPSG:4326.
+// If only SRID is given it denotes an EPSG code. If both are supplied they must
+// identify the same CRS. No coordinate transformation is implied.
+type SpatialValue struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Wkb   []byte                 `protobuf:"bytes,1,opt,name=wkb,proto3" json:"wkb,omitempty"`
+	Srid  *int32                 `protobuf:"varint,2,opt,name=srid,proto3,oneof" json:"srid,omitempty"`
+	// Authority-qualified code (e.g. EPSG:4326) or an absolute CRS URI.
+	Crs           *string `protobuf:"bytes,3,opt,name=crs,proto3,oneof" json:"crs,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SpatialValue) Reset() {
+	*x = SpatialValue{}
+	mi := &file_kubling_v1_value_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SpatialValue) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SpatialValue) ProtoMessage() {}
+
+func (x *SpatialValue) ProtoReflect() protoreflect.Message {
+	mi := &file_kubling_v1_value_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SpatialValue.ProtoReflect.Descriptor instead.
+func (*SpatialValue) Descriptor() ([]byte, []int) {
+	return file_kubling_v1_value_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *SpatialValue) GetWkb() []byte {
+	if x != nil {
+		return x.Wkb
+	}
+	return nil
+}
+
+func (x *SpatialValue) GetSrid() int32 {
+	if x != nil && x.Srid != nil {
+		return *x.Srid
+	}
+	return 0
+}
+
+func (x *SpatialValue) GetCrs() string {
+	if x != nil && x.Crs != nil {
+		return *x.Crs
+	}
+	return ""
+}
+
+// Immutable, session-scoped BLOB or UTF-8 CLOB, read through LobService.
+// References survive statement/transaction closure until expiry, explicit
+// release, session closure or node loss. Capability renewal does not invalidate
+// them. Resource pressure must reject new creations, never revoke issued leases.
+// IDs are opaque and are not bearer credentials.
+type LobReference struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	LobId string                 `protobuf:"bytes,1,opt,name=lob_id,json=lobId,proto3" json:"lob_id,omitempty"`
+	Type  ValueType              `protobuf:"varint,2,opt,name=type,proto3,enum=kubling.v1.ValueType" json:"type,omitempty"`
+	// CLOB sizes and offsets are UTF-8 byte counts, not character counts.
+	SizeBytes *uint64 `protobuf:"varint,3,opt,name=size_bytes,json=sizeBytes,proto3,oneof" json:"size_bytes,omitempty"`
+	SessionId string  `protobuf:"bytes,4,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	// Semantically required on every reference issued by Execute or WriteLob.
+	ExpiresAtUnixMs *int64 `protobuf:"varint,5,opt,name=expires_at_unix_ms,json=expiresAtUnixMs,proto3,oneof" json:"expires_at_unix_ms,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *LobReference) Reset() {
+	*x = LobReference{}
+	mi := &file_kubling_v1_value_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LobReference) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LobReference) ProtoMessage() {}
+
+func (x *LobReference) ProtoReflect() protoreflect.Message {
+	mi := &file_kubling_v1_value_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LobReference.ProtoReflect.Descriptor instead.
+func (*LobReference) Descriptor() ([]byte, []int) {
+	return file_kubling_v1_value_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *LobReference) GetLobId() string {
+	if x != nil {
+		return x.LobId
+	}
+	return ""
+}
+
+func (x *LobReference) GetType() ValueType {
+	if x != nil {
+		return x.Type
+	}
+	return ValueType_VALUE_TYPE_UNKNOWN
+}
+
+func (x *LobReference) GetSizeBytes() uint64 {
+	if x != nil && x.SizeBytes != nil {
+		return *x.SizeBytes
+	}
+	return 0
+}
+
+func (x *LobReference) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *LobReference) GetExpiresAtUnixMs() int64 {
+	if x != nil && x.ExpiresAtUnixMs != nil {
+		return *x.ExpiresAtUnixMs
+	}
+	return 0
+}
+
 type BlobValue struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Data          []byte                 `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
@@ -617,7 +962,7 @@ type BlobValue struct {
 
 func (x *BlobValue) Reset() {
 	*x = BlobValue{}
-	mi := &file_kubling_v1_value_proto_msgTypes[2]
+	mi := &file_kubling_v1_value_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -629,7 +974,7 @@ func (x *BlobValue) String() string {
 func (*BlobValue) ProtoMessage() {}
 
 func (x *BlobValue) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_value_proto_msgTypes[2]
+	mi := &file_kubling_v1_value_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -642,7 +987,7 @@ func (x *BlobValue) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BlobValue.ProtoReflect.Descriptor instead.
 func (*BlobValue) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_value_proto_rawDescGZIP(), []int{2}
+	return file_kubling_v1_value_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *BlobValue) GetData() []byte {
@@ -661,7 +1006,7 @@ type ClobValue struct {
 
 func (x *ClobValue) Reset() {
 	*x = ClobValue{}
-	mi := &file_kubling_v1_value_proto_msgTypes[3]
+	mi := &file_kubling_v1_value_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -673,7 +1018,7 @@ func (x *ClobValue) String() string {
 func (*ClobValue) ProtoMessage() {}
 
 func (x *ClobValue) ProtoReflect() protoreflect.Message {
-	mi := &file_kubling_v1_value_proto_msgTypes[3]
+	mi := &file_kubling_v1_value_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -686,7 +1031,7 @@ func (x *ClobValue) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClobValue.ProtoReflect.Descriptor instead.
 func (*ClobValue) Descriptor() ([]byte, []int) {
-	return file_kubling_v1_value_proto_rawDescGZIP(), []int{3}
+	return file_kubling_v1_value_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ClobValue) GetData() string {
@@ -701,8 +1046,16 @@ var File_kubling_v1_value_proto protoreflect.FileDescriptor
 const file_kubling_v1_value_proto_rawDesc = "" +
 	"\n" +
 	"\x16kubling/v1/value.proto\x12\n" +
-	"kubling.v1\"\v\n" +
-	"\tNullValue\"\x82\a\n" +
+	"kubling.v1\"\xd0\x01\n" +
+	"\x0eTypeDescriptor\x12)\n" +
+	"\x04type\x18\x01 \x01(\x0e2\x15.kubling.v1.ValueTypeR\x04type\x12=\n" +
+	"\felement_type\x18\x02 \x01(\v2\x1a.kubling.v1.TypeDescriptorR\velementType\x12!\n" +
+	"\tprecision\x18\x03 \x01(\x05H\x00R\tprecision\x88\x01\x01\x12\x19\n" +
+	"\x05scale\x18\x04 \x01(\x05H\x01R\x05scale\x88\x01\x01B\f\n" +
+	"\n" +
+	"_precisionB\b\n" +
+	"\x06_scale\"\v\n" +
+	"\tNullValue\"\x90\t\n" +
 	"\x05Value\x126\n" +
 	"\n" +
 	"null_value\x18\x01 \x01(\v2\x15.kubling.v1.NullValueH\x00R\tnullValue\x12#\n" +
@@ -737,12 +1090,37 @@ const file_kubling_v1_value_proto_rawDesc = "" +
 	"\x0egeometry_value\x18\x14 \x01(\fH\x00R\rgeometryValue\x12)\n" +
 	"\x0fgeography_value\x18\x15 \x01(\fH\x00R\x0egeographyValue\x12\x1f\n" +
 	"\n" +
-	"json_value\x18\x16 \x01(\tH\x00R\tjsonValueB\x06\n" +
-	"\x04kind\"\x1f\n" +
+	"json_value\x18\x16 \x01(\tH\x00R\tjsonValue\x129\n" +
+	"\varray_value\x18\x17 \x01(\v2\x16.kubling.v1.ArrayValueH\x00R\n" +
+	"arrayValue\x12F\n" +
+	"\x11geometry_with_crs\x18\x18 \x01(\v2\x18.kubling.v1.SpatialValueH\x00R\x0fgeometryWithCrs\x12H\n" +
+	"\x12geography_with_crs\x18\x19 \x01(\v2\x18.kubling.v1.SpatialValueH\x00R\x10geographyWithCrs\x12?\n" +
+	"\rlob_reference\x18\x1a \x01(\v2\x18.kubling.v1.LobReferenceH\x00R\flobReferenceB\x06\n" +
+	"\x04kind\"z\n" +
+	"\n" +
+	"ArrayValue\x12=\n" +
+	"\felement_type\x18\x01 \x01(\v2\x1a.kubling.v1.TypeDescriptorR\velementType\x12-\n" +
+	"\belements\x18\x02 \x03(\v2\x11.kubling.v1.ValueR\belements\"a\n" +
+	"\fSpatialValue\x12\x10\n" +
+	"\x03wkb\x18\x01 \x01(\fR\x03wkb\x12\x17\n" +
+	"\x04srid\x18\x02 \x01(\x05H\x00R\x04srid\x88\x01\x01\x12\x15\n" +
+	"\x03crs\x18\x03 \x01(\tH\x01R\x03crs\x88\x01\x01B\a\n" +
+	"\x05_sridB\x06\n" +
+	"\x04_crs\"\xeb\x01\n" +
+	"\fLobReference\x12\x15\n" +
+	"\x06lob_id\x18\x01 \x01(\tR\x05lobId\x12)\n" +
+	"\x04type\x18\x02 \x01(\x0e2\x15.kubling.v1.ValueTypeR\x04type\x12\"\n" +
+	"\n" +
+	"size_bytes\x18\x03 \x01(\x04H\x00R\tsizeBytes\x88\x01\x01\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x04 \x01(\tR\tsessionId\x120\n" +
+	"\x12expires_at_unix_ms\x18\x05 \x01(\x03H\x01R\x0fexpiresAtUnixMs\x88\x01\x01B\r\n" +
+	"\v_size_bytesB\x15\n" +
+	"\x13_expires_at_unix_ms\"\x1f\n" +
 	"\tBlobValue\x12\x12\n" +
 	"\x04data\x18\x01 \x01(\fR\x04data\"\x1f\n" +
 	"\tClobValue\x12\x12\n" +
-	"\x04data\x18\x01 \x01(\tR\x04data*\x86\x04\n" +
+	"\x04data\x18\x01 \x01(\tR\x04data*\x9c\x04\n" +
 	"\tValueType\x12\x16\n" +
 	"\x12VALUE_TYPE_UNKNOWN\x10\x00\x12\x15\n" +
 	"\x11VALUE_TYPE_STRING\x10\x01\x12\x18\n" +
@@ -766,7 +1144,8 @@ const file_kubling_v1_value_proto_rawDesc = "" +
 	"\x13VALUE_TYPE_GEOMETRY\x10\x12\x12\x18\n" +
 	"\x14VALUE_TYPE_GEOGRAPHY\x10\x13\x12\x13\n" +
 	"\x0fVALUE_TYPE_JSON\x10\x14\x12\x12\n" +
-	"\x0eVALUE_TYPE_XML\x10\x15Bq\n" +
+	"\x0eVALUE_TYPE_XML\x10\x15\x12\x14\n" +
+	"\x10VALUE_TYPE_ARRAY\x10\x16Bq\n" +
 	"\x1acom.kubling.transport.grpcB\n" +
 	"ValueProtoP\x01ZEgithub.com/kubling-community/kubling-grpc/sdk-go/kubling/v1;kublingv1b\x06proto3"
 
@@ -783,23 +1162,36 @@ func file_kubling_v1_value_proto_rawDescGZIP() []byte {
 }
 
 var file_kubling_v1_value_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_kubling_v1_value_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_kubling_v1_value_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_kubling_v1_value_proto_goTypes = []any{
-	(ValueType)(0),    // 0: kubling.v1.ValueType
-	(*NullValue)(nil), // 1: kubling.v1.NullValue
-	(*Value)(nil),     // 2: kubling.v1.Value
-	(*BlobValue)(nil), // 3: kubling.v1.BlobValue
-	(*ClobValue)(nil), // 4: kubling.v1.ClobValue
+	(ValueType)(0),         // 0: kubling.v1.ValueType
+	(*TypeDescriptor)(nil), // 1: kubling.v1.TypeDescriptor
+	(*NullValue)(nil),      // 2: kubling.v1.NullValue
+	(*Value)(nil),          // 3: kubling.v1.Value
+	(*ArrayValue)(nil),     // 4: kubling.v1.ArrayValue
+	(*SpatialValue)(nil),   // 5: kubling.v1.SpatialValue
+	(*LobReference)(nil),   // 6: kubling.v1.LobReference
+	(*BlobValue)(nil),      // 7: kubling.v1.BlobValue
+	(*ClobValue)(nil),      // 8: kubling.v1.ClobValue
 }
 var file_kubling_v1_value_proto_depIdxs = []int32{
-	1, // 0: kubling.v1.Value.null_value:type_name -> kubling.v1.NullValue
-	3, // 1: kubling.v1.Value.blob_value:type_name -> kubling.v1.BlobValue
-	4, // 2: kubling.v1.Value.clob_value:type_name -> kubling.v1.ClobValue
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	0,  // 0: kubling.v1.TypeDescriptor.type:type_name -> kubling.v1.ValueType
+	1,  // 1: kubling.v1.TypeDescriptor.element_type:type_name -> kubling.v1.TypeDescriptor
+	2,  // 2: kubling.v1.Value.null_value:type_name -> kubling.v1.NullValue
+	7,  // 3: kubling.v1.Value.blob_value:type_name -> kubling.v1.BlobValue
+	8,  // 4: kubling.v1.Value.clob_value:type_name -> kubling.v1.ClobValue
+	4,  // 5: kubling.v1.Value.array_value:type_name -> kubling.v1.ArrayValue
+	5,  // 6: kubling.v1.Value.geometry_with_crs:type_name -> kubling.v1.SpatialValue
+	5,  // 7: kubling.v1.Value.geography_with_crs:type_name -> kubling.v1.SpatialValue
+	6,  // 8: kubling.v1.Value.lob_reference:type_name -> kubling.v1.LobReference
+	1,  // 9: kubling.v1.ArrayValue.element_type:type_name -> kubling.v1.TypeDescriptor
+	3,  // 10: kubling.v1.ArrayValue.elements:type_name -> kubling.v1.Value
+	0,  // 11: kubling.v1.LobReference.type:type_name -> kubling.v1.ValueType
+	12, // [12:12] is the sub-list for method output_type
+	12, // [12:12] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_kubling_v1_value_proto_init() }
@@ -807,7 +1199,8 @@ func file_kubling_v1_value_proto_init() {
 	if File_kubling_v1_value_proto != nil {
 		return
 	}
-	file_kubling_v1_value_proto_msgTypes[1].OneofWrappers = []any{
+	file_kubling_v1_value_proto_msgTypes[0].OneofWrappers = []any{}
+	file_kubling_v1_value_proto_msgTypes[2].OneofWrappers = []any{
 		(*Value_NullValue)(nil),
 		(*Value_StringValue)(nil),
 		(*Value_VarbinaryValue)(nil),
@@ -830,14 +1223,20 @@ func file_kubling_v1_value_proto_init() {
 		(*Value_GeometryValue)(nil),
 		(*Value_GeographyValue)(nil),
 		(*Value_JsonValue)(nil),
+		(*Value_ArrayValue)(nil),
+		(*Value_GeometryWithCrs)(nil),
+		(*Value_GeographyWithCrs)(nil),
+		(*Value_LobReference)(nil),
 	}
+	file_kubling_v1_value_proto_msgTypes[4].OneofWrappers = []any{}
+	file_kubling_v1_value_proto_msgTypes[5].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_kubling_v1_value_proto_rawDesc), len(file_kubling_v1_value_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   4,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
