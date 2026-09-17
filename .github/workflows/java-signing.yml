@@ -2,9 +2,6 @@ name: Java signing check
 
 on:
   workflow_dispatch:
-  # Bootstrap the check before this workflow is available on main.
-  push:
-    branches: [feat/generic-execute-java-python-releases]
 
 permissions:
   contents: read
