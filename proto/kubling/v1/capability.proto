@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package kubling.v1;
+
+import "kubling/v1/transaction.proto";
+import "kubling/v1/value.proto";
+
+option go_package = "github.com/kubling-community/kubling-grpc/sdk-go/kubling/v1;kublingv1";
+option java_multiple_files = true;
+option java_outer_classname = "CapabilityProto";
+option java_package = "com.kubling.transport.grpc";
+
+// Independent of the server product version. This proposal is protocol 1.1.
+message ProtocolVersion {
+  uint32 major = 1;
+  uint32 minor = 2;
+}
+
+// All sizes are uncompressed serialized protobuf bytes unless stated otherwise.
+// Zero means unknown, not unlimited. generic_execute_v1 requires positive
+// message and batch limits. A client may impose smaller local limits.
+message ProtocolLimits {
+  uint64 max_request_message_bytes = 1;
+  uint64 max_response_message_bytes = 2;
+  uint32 max_rows_per_batch = 3;
+  uint64 max_batch_bytes = 4;
+  // Payload bytes per chunk. Required when advertising either LOB feature.
+  uint32 max_lob_chunk_bytes = 5;
+  uint32 max_array_dimensions = 6;
+  // Maximum payload bytes of a newly created LOB; positive with LOB support.
+  // Lowering this limit does not invalidate previously issued references.
+  uint64 max_lob_bytes = 7;
+}
+
+// Logical type support in this session/VDB. Representation features are
+// advertised separately; support for BLOB does not imply chunked LOB support.
+message SupportedType {
+  ValueType type = 1;
+  bool input = 2;
+  bool output = 3;
+}
+
+// Effective capabilities for the authenticated session on the serving node.
+// Feature names remain in GetServerInfoResponse.features for compatibility.
+// A missing message means these guarantees are unavailable.
+message Capabilities {
+  ProtocolVersion protocol_version = 1;
+  ProtocolLimits limits = 2;
+  repeated SupportedType supported_types = 3;
+  AffinityRequirement affinity_requirement = 4;
+  Affinity affinity = 5;
+  // Opaque identity for this snapshot, scoped to the session and serving node.
+  // Execute must reject a stale/mismatched identity before executing SQL.
+  string capability_id = 6;
+  // Minimum terminal-outcome retention after completion. Absent means unknown.
+  // Does not promise recovery after losing the owning node.
+  optional uint64 transaction_status_retention_seconds = 7;
+  // Positive minimum lease, measured from reference creation, with LOB support.
+  // Every reference carries its own expiry, independent of capability renewal.
+  optional uint64 lob_reference_retention_seconds = 8;
+}

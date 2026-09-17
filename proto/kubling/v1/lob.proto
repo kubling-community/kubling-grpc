@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package kubling.v1;
+
+import "kubling/v1/value.proto";
+
+option go_package = "github.com/kubling-community/kubling-grpc/sdk-go/kubling/v1;kublingv1";
+option java_multiple_files = true;
+option java_outer_classname = "LobProto";
+option java_package = "com.kubling.transport.grpc";
+
+// Optional transfer API, separately gated by lob_read_v1 and lob_write_v1.
+// All calls authenticate the owning session and honor its affinity.
+// A live reference can use any current compatible capability of that session
+// and node, regardless of the snapshot under which the reference was created.
+service LobService {
+  rpc ReadLob(ReadLobRequest) returns (stream ReadLobResponse);
+  rpc WriteLob(stream WriteLobRequest) returns (WriteLobResponse);
+  rpc ReleaseLob(ReleaseLobRequest) returns (ReleaseLobResponse);
+}
+
+message ReadLobRequest {
+  string expiring_token = 1;
+  string lob_id = 2;
+  uint64 offset = 3;
+  // Absent reads to the end; zero requests an empty range.
+  optional uint64 length = 4;
+  // Zero uses the server default; otherwise an upper bound in payload bytes.
+  uint32 max_chunk_bytes = 5;
+  string capability_id = 6;
+}
+
+message ReadLobResponse {
+  uint64 offset = 1;
+  bytes data = 2;
+  // Exactly the last response marks the requested range complete, including
+  // empty ranges. Final gRPC OK is also required for a complete read.
+  bool end_of_read = 3;
+}
+
+message WriteLobRequest {
+  oneof part {
+    // Exactly once, first.
+    LobWriteStart start = 1;
+    // Contiguous offsets starting at zero, after the start message.
+    LobChunk chunk = 2;
+  }
+}
+
+message LobWriteStart {
+  string expiring_token = 1;
+  // Only BLOB and CLOB are supported. CLOB bytes must form valid UTF-8.
+  ValueType type = 2;
+  optional uint64 size_bytes = 3;
+  string capability_id = 4;
+}
+
+message LobChunk {
+  uint64 offset = 1;
+  bytes data = 2;
+}
+
+message WriteLobResponse {
+  // Published only after the upload completes and declared size/type validate.
+  LobReference reference = 1;
+}
+
+message ReleaseLobRequest {
+  string expiring_token = 1;
+  string lob_id = 2;
+  string capability_id = 3;
+}
+
+message ReleaseLobResponse {}

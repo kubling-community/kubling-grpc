@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package kubling.v1;
+
+option go_package = "github.com/kubling-community/kubling-grpc/sdk-go/kubling/v1;kublingv1";
+option java_multiple_files = true;
+option java_outer_classname = "TransactionProto";
+option java_package = "com.kubling.transport.grpc";
+
+// Required routing scope; UNSPECIFIED must not be interpreted as NONE.
+enum AffinityRequirement {
+  AFFINITY_REQUIREMENT_UNSPECIFIED = 0;
+  AFFINITY_REQUIREMENT_NONE = 1;
+  AFFINITY_REQUIREMENT_SESSION = 2;
+  AFFINITY_REQUIREMENT_NODE = 3;
+  AFFINITY_REQUIREMENT_SESSION_AND_NODE = 4;
+}
+
+// Routing information, not authentication or authorization. IDs are opaque.
+// If supplied, echo routing_token in the "kubling-affinity" request metadata.
+// The server must reject a routing mismatch before executing SQL.
+message Affinity {
+  string node_id = 1;
+  string session_id = 2;
+  string routing_token = 3;
+}
+
+enum TransactionState {
+  // No authoritative outcome is available. This is not a rollback.
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  TRANSACTION_STATE_UNKNOWN = 0;
+  TRANSACTION_STATE_NONE = 1;
+  TRANSACTION_STATE_ACTIVE = 2;
+  TRANSACTION_STATE_ROLLBACK_ONLY = 3;
+  TRANSACTION_STATE_COMMITTED = 4;
+  TRANSACTION_STATE_ROLLED_BACK = 5;
+}
+
+// An observation at response creation, not a lease or concurrency guarantee.
+// NONE requires an empty ID. ACTIVE, ROLLBACK_ONLY, COMMITTED and ROLLED_BACK
+// require a non-empty ID. UNKNOWN preserves the queried/affected ID when known;
+// an empty UNKNOWN ID is allowed only if no ID was ever issued.
+// Unknown/expired lookups return UNKNOWN with the requested ID, not NONE.
+message TransactionStatus {
+  string transaction_id = 1;
+  TransactionState state = 2;
+}

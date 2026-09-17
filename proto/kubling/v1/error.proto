@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package kubling.v1;
+
+import "kubling/v1/transaction.proto";
+
+option go_package = "github.com/kubling-community/kubling-grpc/sdk-go/kubling/v1;kublingv1";
+option java_multiple_files = true;
+option java_outer_classname = "ErrorProto";
+option java_package = "com.kubling.transport.grpc";
+
+enum ErrorCategory {
+  ERROR_CATEGORY_UNSPECIFIED = 0;
+  ERROR_CATEGORY_AUTHENTICATION = 1;
+  ERROR_CATEGORY_AUTHORIZATION = 2;
+  ERROR_CATEGORY_VALIDATION = 3;
+  ERROR_CATEGORY_SQL = 4;
+  ERROR_CATEGORY_CONSTRAINT = 5;
+  ERROR_CATEGORY_UNSUPPORTED = 6;
+  ERROR_CATEGORY_RESOURCE = 7;
+  ERROR_CATEGORY_TRANSIENT = 8;
+  ERROR_CATEGORY_INTERNAL = 9;
+}
+
+enum Retryability {
+  RETRYABILITY_UNSPECIFIED = 0;
+  RETRYABILITY_NEVER = 1;
+  // Server certifies that replay has no duplicate effects. This does not
+  // authorize switching SQL RPCs or bypassing the caller's retry policy.
+  RETRYABILITY_SAFE = 2;
+  RETRYABILITY_RESTART_TRANSACTION = 3;
+  RETRYABILITY_CHECK_TRANSACTION_STATUS = 4;
+}
+
+// Pack in google.rpc.Status.details as type.googleapis.com/kubling.v1.KublingError
+// and send through grpc-status-details-bin. Never send as an Execute event.
+// Human-readable gRPC messages are diagnostic, not machine-readable contracts.
+// A transport error may contain no detail; missing/unknown fields never imply
+// retry safety or a committed/rolled-back transaction.
+message KublingError {
+  // Required and stable for errors originated/classified by Kubling.
+  string stable_code = 1;
+  // If present, a stable five-character uppercase alphanumeric SQLSTATE.
+  optional string sql_state = 2;
+  optional int32 vendor_code = 3;
+  ErrorCategory category = 4;
+  Retryability retryability = 5;
+  TransactionStatus transaction = 6;
+  // False certifies that SQL never started (required on pre-SQL validation
+  // errors). True means SQL started, not that it completed or committed.
+  // Absent means unknown or not applicable; never infer false from the default.
+  optional bool sql_executed = 7;
+}

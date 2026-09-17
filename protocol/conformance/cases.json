@@ -1,0 +1,1007 @@
+{
+  "schema_version": 1,
+  "default_advertised": [
+    "generic_execute_v1",
+    "typed_parameters_v1",
+    "structured_errors_v1",
+    "transaction_ids_v1",
+    "transaction_status_v1",
+    "array_values_v1",
+    "spatial_values_v1",
+    "lob_read_v1",
+    "lob_write_v1",
+    "multiple_results_v1",
+    "generated_keys_v1"
+  ],
+  "transactions": [
+    {
+      "name": "autocommit_success",
+      "status": {
+        "state": "TRANSACTION_STATE_NONE",
+        "transactionId": ""
+      },
+      "known_id": "",
+      "valid": true
+    },
+    {
+      "name": "none_cannot_have_id",
+      "status": {
+        "state": "TRANSACTION_STATE_NONE",
+        "transactionId": "tx"
+      },
+      "known_id": "",
+      "valid": false
+    },
+    {
+      "name": "active_with_id",
+      "status": {
+        "state": "TRANSACTION_STATE_ACTIVE",
+        "transactionId": "tx"
+      },
+      "known_id": "",
+      "valid": true
+    },
+    {
+      "name": "active_missing_id",
+      "status": {
+        "state": "TRANSACTION_STATE_ACTIVE",
+        "transactionId": ""
+      },
+      "known_id": "",
+      "valid": false
+    },
+    {
+      "name": "rollback_only_with_id",
+      "status": {
+        "state": "TRANSACTION_STATE_ROLLBACK_ONLY",
+        "transactionId": "tx"
+      },
+      "known_id": "",
+      "valid": true
+    },
+    {
+      "name": "rollback_only_missing_id",
+      "status": {
+        "state": "TRANSACTION_STATE_ROLLBACK_ONLY",
+        "transactionId": ""
+      },
+      "known_id": "",
+      "valid": false
+    },
+    {
+      "name": "committed_with_id",
+      "status": {
+        "state": "TRANSACTION_STATE_COMMITTED",
+        "transactionId": "tx"
+      },
+      "known_id": "",
+      "valid": true
+    },
+    {
+      "name": "committed_missing_id",
+      "status": {
+        "state": "TRANSACTION_STATE_COMMITTED",
+        "transactionId": ""
+      },
+      "known_id": "",
+      "valid": false
+    },
+    {
+      "name": "rolled_back_with_id",
+      "status": {
+        "state": "TRANSACTION_STATE_ROLLED_BACK",
+        "transactionId": "tx"
+      },
+      "known_id": "",
+      "valid": true
+    },
+    {
+      "name": "rolled_back_missing_id",
+      "status": {
+        "state": "TRANSACTION_STATE_ROLLED_BACK",
+        "transactionId": ""
+      },
+      "known_id": "",
+      "valid": false
+    },
+    {
+      "name": "autocommit_interrupted",
+      "status": {
+        "state": "TRANSACTION_STATE_UNKNOWN",
+        "transactionId": ""
+      },
+      "known_id": "",
+      "valid": true
+    },
+    {
+      "name": "expired_lookup_preserves_id",
+      "status": {
+        "state": "TRANSACTION_STATE_UNKNOWN",
+        "transactionId": "expired"
+      },
+      "known_id": "expired",
+      "valid": true
+    },
+    {
+      "name": "unknown_cannot_discard_id",
+      "status": {
+        "state": "TRANSACTION_STATE_UNKNOWN",
+        "transactionId": ""
+      },
+      "known_id": "tx",
+      "valid": false
+    },
+    {
+      "name": "unknown_cannot_replace_id",
+      "status": {
+        "state": "TRANSACTION_STATE_UNKNOWN",
+        "transactionId": "different"
+      },
+      "known_id": "tx",
+      "valid": false
+    },
+    {
+      "name": "no_op_rollback_is_session_observation",
+      "status": {
+        "state": "TRANSACTION_STATE_NONE",
+        "transactionId": ""
+      },
+      "known_id": "historical",
+      "valid": true
+    }
+  ],
+  "parameters": [
+    {
+      "name": "typed_null",
+      "parameter": {
+        "declaredType": {
+          "type": "VALUE_TYPE_INTEGER"
+        },
+        "value": {
+          "nullValue": {}
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "legacy_null",
+      "parameter": {
+        "value": {
+          "nullValue": {}
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "explicit_unknown",
+      "parameter": {
+        "declaredType": {
+          "type": "VALUE_TYPE_UNKNOWN"
+        },
+        "value": {
+          "nullValue": {}
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "missing_element",
+      "parameter": {
+        "declaredType": {
+          "type": "VALUE_TYPE_ARRAY"
+        },
+        "value": {
+          "nullValue": {}
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "element_on_scalar",
+      "parameter": {
+        "declaredType": {
+          "type": "VALUE_TYPE_INTEGER",
+          "elementType": {
+            "type": "VALUE_TYPE_INTEGER"
+          }
+        },
+        "value": {
+          "nullValue": {}
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "recursive_ragged_array",
+      "parameter": {
+        "declaredType": {
+          "type": "VALUE_TYPE_ARRAY",
+          "elementType": {
+            "type": "VALUE_TYPE_ARRAY",
+            "elementType": {
+              "type": "VALUE_TYPE_INTEGER"
+            }
+          }
+        },
+        "value": {
+          "arrayValue": {
+            "elementType": {
+              "type": "VALUE_TYPE_ARRAY",
+              "elementType": {
+                "type": "VALUE_TYPE_INTEGER"
+              }
+            },
+            "elements": [
+              {
+                "arrayValue": {
+                  "elementType": {
+                    "type": "VALUE_TYPE_INTEGER"
+                  },
+                  "elements": [
+                    {
+                      "integerValue": 1
+                    },
+                    {
+                      "nullValue": {}
+                    }
+                  ]
+                }
+              },
+              {
+                "arrayValue": {
+                  "elementType": {
+                    "type": "VALUE_TYPE_INTEGER"
+                  },
+                  "elements": []
+                }
+              },
+              {
+                "nullValue": {}
+              }
+            ]
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "nested_array_wrong_leaf",
+      "parameter": {
+        "declaredType": {
+          "type": "VALUE_TYPE_ARRAY",
+          "elementType": {
+            "type": "VALUE_TYPE_ARRAY",
+            "elementType": {
+              "type": "VALUE_TYPE_INTEGER"
+            }
+          }
+        },
+        "value": {
+          "arrayValue": {
+            "elementType": {
+              "type": "VALUE_TYPE_ARRAY",
+              "elementType": {
+                "type": "VALUE_TYPE_INTEGER"
+              }
+            },
+            "elements": [
+              {
+                "stringValue": "wrong"
+              }
+            ]
+          }
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "string_precision_forbidden",
+      "parameter": {
+        "declaredType": {
+          "type": "VALUE_TYPE_STRING",
+          "precision": 20
+        },
+        "value": {
+          "nullValue": {}
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "fixed_integer_precision_forbidden",
+      "parameter": {
+        "declaredType": {
+          "type": "VALUE_TYPE_INTEGER",
+          "precision": 10
+        },
+        "value": {
+          "nullValue": {}
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "zero_precision",
+      "parameter": {
+        "declaredType": {
+          "type": "VALUE_TYPE_BIGDECIMAL",
+          "precision": 0
+        },
+        "value": {
+          "nullValue": {}
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "scale_exceeds_precision",
+      "parameter": {
+        "declaredType": {
+          "type": "VALUE_TYPE_BIGDECIMAL",
+          "precision": 3,
+          "scale": 4
+        },
+        "value": {
+          "nullValue": {}
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "scale_requires_precision",
+      "parameter": {
+        "declaredType": {
+          "type": "VALUE_TYPE_BIGDECIMAL",
+          "scale": 2
+        },
+        "value": {
+          "nullValue": {}
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "integer_scale_forbidden",
+      "parameter": {
+        "declaredType": {
+          "type": "VALUE_TYPE_BIGINTEGER",
+          "precision": 5,
+          "scale": 0
+        },
+        "value": {
+          "nullValue": {}
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "negative_decimal_scale",
+      "parameter": {
+        "declaredType": {
+          "type": "VALUE_TYPE_BIGDECIMAL",
+          "precision": 3,
+          "scale": -2
+        },
+        "value": {
+          "bigdecimalValue": "12300"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "decimal_does_not_fit_without_rounding",
+      "parameter": {
+        "declaredType": {
+          "type": "VALUE_TYPE_BIGDECIMAL",
+          "precision": 3,
+          "scale": 1
+        },
+        "value": {
+          "bigdecimalValue": "12.34"
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "exact_decimal_padding",
+      "parameter": {
+        "declaredType": {
+          "type": "VALUE_TYPE_BIGDECIMAL",
+          "precision": 5,
+          "scale": 2
+        },
+        "value": {
+          "bigdecimalValue": "12.3"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "integer_precision_exceeded",
+      "parameter": {
+        "declaredType": {
+          "type": "VALUE_TYPE_BIGINTEGER",
+          "precision": 2
+        },
+        "value": {
+          "bigintegerValue": "123"
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "incompatible_kind",
+      "parameter": {
+        "declaredType": {
+          "type": "VALUE_TYPE_INTEGER"
+        },
+        "value": {
+          "stringValue": "1"
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "typed_null_requires_explicit_null",
+      "parameter": {
+        "declaredType": {
+          "type": "VALUE_TYPE_INTEGER"
+        }
+      },
+      "valid": false
+    }
+  ],
+  "features": [
+    {
+      "name": "execute_by_rpc",
+      "response_feature": "generic_execute_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [],
+      "fields": {},
+      "request_allowed": true,
+      "response_allowed": true
+    },
+    {
+      "name": "execute_not_advertised",
+      "response_feature": "generic_execute_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [],
+      "fields": {},
+      "request_allowed": false,
+      "response_allowed": false,
+      "advertised": []
+    },
+    {
+      "name": "typed_input_without_acceptance",
+      "response_feature": "typed_parameters_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [],
+      "fields": {
+        "kubling.v1.Parameter.declared_type": {}
+      },
+      "request_allowed": true,
+      "response_allowed": false
+    },
+    {
+      "name": "typed_input_not_advertised",
+      "response_feature": "typed_parameters_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [],
+      "fields": {
+        "kubling.v1.Parameter.declared_type": {}
+      },
+      "request_allowed": false,
+      "response_allowed": false,
+      "advertised": [
+        "generic_execute_v1"
+      ]
+    },
+    {
+      "name": "structured_error_without_acceptance",
+      "response_feature": "structured_errors_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [],
+      "fields": {},
+      "request_allowed": true,
+      "response_allowed": true
+    },
+    {
+      "name": "structured_error_on_legacy_query",
+      "response_feature": "structured_errors_v1",
+      "rpc": "/kubling.v1.QueryService/Query",
+      "accepted": [],
+      "fields": {},
+      "request_allowed": true,
+      "response_allowed": true
+    },
+    {
+      "name": "additive_transaction_id",
+      "response_feature": "transaction_ids_v1",
+      "rpc": "/kubling.v1.QueryService/BeginTransaction",
+      "accepted": [],
+      "fields": {},
+      "request_allowed": true,
+      "response_allowed": true
+    },
+    {
+      "name": "transaction_status_by_rpc",
+      "response_feature": "transaction_status_v1",
+      "rpc": "/kubling.v1.QueryService/GetTransactionStatus",
+      "accepted": [],
+      "fields": {
+        "kubling.v1.GetTransactionStatusRequest.transaction_id": "tx"
+      },
+      "request_allowed": true,
+      "response_allowed": true
+    },
+    {
+      "name": "array_input_is_not_output_acceptance",
+      "response_feature": "array_values_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [],
+      "fields": {
+        "kubling.v1.Value.array_value": {}
+      },
+      "request_allowed": true,
+      "response_allowed": false
+    },
+    {
+      "name": "array_output_accepted",
+      "response_feature": "array_values_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [
+        "array_values_v1"
+      ],
+      "fields": {},
+      "request_allowed": true,
+      "response_allowed": true
+    },
+    {
+      "name": "spatial_input_is_not_output_acceptance",
+      "response_feature": "spatial_values_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [],
+      "fields": {
+        "kubling.v1.Value.geometry_with_crs": {}
+      },
+      "request_allowed": true,
+      "response_allowed": false
+    },
+    {
+      "name": "spatial_output_accepted",
+      "response_feature": "spatial_values_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [
+        "spatial_values_v1"
+      ],
+      "fields": {},
+      "request_allowed": true,
+      "response_allowed": true
+    },
+    {
+      "name": "read_lob_by_rpc",
+      "response_feature": "lob_read_v1",
+      "rpc": "/kubling.v1.LobService/ReadLob",
+      "accepted": [],
+      "fields": {},
+      "request_allowed": true,
+      "response_allowed": false
+    },
+    {
+      "name": "release_lob_by_rpc",
+      "response_feature": "lob_read_v1",
+      "rpc": "/kubling.v1.LobService/ReleaseLob",
+      "accepted": [],
+      "fields": {},
+      "request_allowed": true,
+      "response_allowed": false
+    },
+    {
+      "name": "write_lob_by_rpc",
+      "response_feature": "lob_write_v1",
+      "rpc": "/kubling.v1.LobService/WriteLob",
+      "accepted": [],
+      "fields": {},
+      "request_allowed": true,
+      "response_allowed": true
+    },
+    {
+      "name": "input_reference_without_output_acceptance",
+      "response_feature": "lob_write_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [],
+      "fields": {
+        "kubling.v1.Value.lob_reference": {}
+      },
+      "request_allowed": true,
+      "response_allowed": false
+    },
+    {
+      "name": "lob_reference_output_accepted",
+      "response_feature": "lob_read_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [
+        "lob_read_v1"
+      ],
+      "fields": {},
+      "request_allowed": true,
+      "response_allowed": true
+    },
+    {
+      "name": "multiple_results_not_accepted",
+      "response_feature": "multiple_results_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [],
+      "fields": {},
+      "request_allowed": true,
+      "response_allowed": false
+    },
+    {
+      "name": "multiple_results_accepted",
+      "response_feature": "multiple_results_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [
+        "multiple_results_v1"
+      ],
+      "fields": {},
+      "request_allowed": true,
+      "response_allowed": true
+    },
+    {
+      "name": "keys_flag_without_acceptance",
+      "response_feature": "generated_keys_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [],
+      "fields": {
+        "kubling.v1.ExecuteRequest.return_generated_keys": true
+      },
+      "request_allowed": false,
+      "response_allowed": false
+    },
+    {
+      "name": "keys_acceptance_without_flag",
+      "response_feature": "generated_keys_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [
+        "generated_keys_v1"
+      ],
+      "fields": {},
+      "request_allowed": true,
+      "response_allowed": false
+    },
+    {
+      "name": "keys_flag_and_acceptance",
+      "response_feature": "generated_keys_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [
+        "generated_keys_v1"
+      ],
+      "fields": {
+        "kubling.v1.ExecuteRequest.return_generated_keys": true
+      },
+      "request_allowed": true,
+      "response_allowed": true
+    },
+    {
+      "name": "unknown_requested_feature",
+      "response_feature": "generic_execute_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [
+        "unknown_v1"
+      ],
+      "fields": {},
+      "request_allowed": false,
+      "response_allowed": true
+    },
+    {
+      "name": "duplicate_requested_feature",
+      "response_feature": "generic_execute_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [
+        "array_values_v1",
+        "array_values_v1"
+      ],
+      "fields": {},
+      "request_allowed": false,
+      "response_allowed": true
+    },
+    {
+      "name": "missing_dependency",
+      "response_feature": "lob_read_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [
+        "lob_read_v1"
+      ],
+      "fields": {},
+      "request_allowed": false,
+      "response_allowed": false,
+      "advertised": [
+        "lob_read_v1"
+      ]
+    }
+  ],
+  "lob_leases": [
+    {
+      "reference": {
+        "lobId": "lob",
+        "type": "VALUE_TYPE_BLOB",
+        "sizeBytes": "512",
+        "sessionId": "session",
+        "expiresAtUnixMs": "1060000"
+      },
+      "creation": {
+        "capability_id": "A",
+        "node_id": "node",
+        "issued_at_unix_ms": "1000000",
+        "retention_seconds": 60,
+        "max_lob_bytes": "1024"
+      },
+      "current": {
+        "capability_id": "B",
+        "node_id": "node",
+        "session_id": "session",
+        "lob_read_supported": true,
+        "retention_seconds": 1,
+        "max_lob_bytes": "1"
+      },
+      "now_unix_ms": "1030000",
+      "lease_valid": true,
+      "readable": true,
+      "name": "renewed_capability_does_not_revoke_lease"
+    },
+    {
+      "reference": {
+        "lobId": "lob",
+        "type": "VALUE_TYPE_BLOB",
+        "sizeBytes": "512",
+        "sessionId": "session"
+      },
+      "creation": {
+        "capability_id": "A",
+        "node_id": "node",
+        "issued_at_unix_ms": "1000000",
+        "retention_seconds": 60,
+        "max_lob_bytes": "1024"
+      },
+      "current": {
+        "capability_id": "B",
+        "node_id": "node",
+        "session_id": "session",
+        "lob_read_supported": true,
+        "retention_seconds": 1,
+        "max_lob_bytes": "1"
+      },
+      "now_unix_ms": "1030000",
+      "lease_valid": false,
+      "readable": false,
+      "name": "missing_expiry"
+    },
+    {
+      "reference": {
+        "lobId": "lob",
+        "type": "VALUE_TYPE_BLOB",
+        "sizeBytes": "512",
+        "sessionId": "session",
+        "expiresAtUnixMs": "1001000"
+      },
+      "creation": {
+        "capability_id": "A",
+        "node_id": "node",
+        "issued_at_unix_ms": "1000000",
+        "retention_seconds": 60,
+        "max_lob_bytes": "1024"
+      },
+      "current": {
+        "capability_id": "B",
+        "node_id": "node",
+        "session_id": "session",
+        "lob_read_supported": true,
+        "retention_seconds": 1,
+        "max_lob_bytes": "1"
+      },
+      "now_unix_ms": "1030000",
+      "lease_valid": false,
+      "readable": false,
+      "name": "expiry_too_early"
+    },
+    {
+      "reference": {
+        "lobId": "lob",
+        "type": "VALUE_TYPE_BLOB",
+        "sizeBytes": "2048",
+        "sessionId": "session",
+        "expiresAtUnixMs": "1060000"
+      },
+      "creation": {
+        "capability_id": "A",
+        "node_id": "node",
+        "issued_at_unix_ms": "1000000",
+        "retention_seconds": 60,
+        "max_lob_bytes": "1024"
+      },
+      "current": {
+        "capability_id": "B",
+        "node_id": "node",
+        "session_id": "session",
+        "lob_read_supported": true,
+        "retention_seconds": 1,
+        "max_lob_bytes": "1"
+      },
+      "now_unix_ms": "1030000",
+      "lease_valid": false,
+      "readable": false,
+      "name": "creation_too_large"
+    },
+    {
+      "reference": {
+        "lobId": "lob",
+        "type": "VALUE_TYPE_BLOB",
+        "sizeBytes": "512",
+        "sessionId": "session",
+        "expiresAtUnixMs": "1060000"
+      },
+      "creation": {
+        "capability_id": "A",
+        "node_id": "node",
+        "issued_at_unix_ms": "1000000",
+        "retention_seconds": 60,
+        "max_lob_bytes": "1024"
+      },
+      "current": {
+        "capability_id": "B",
+        "node_id": "node",
+        "session_id": "other",
+        "lob_read_supported": true,
+        "retention_seconds": 1,
+        "max_lob_bytes": "1"
+      },
+      "now_unix_ms": "1030000",
+      "lease_valid": true,
+      "readable": false,
+      "name": "different_session"
+    },
+    {
+      "reference": {
+        "lobId": "lob",
+        "type": "VALUE_TYPE_BLOB",
+        "sizeBytes": "512",
+        "sessionId": "session",
+        "expiresAtUnixMs": "1060000"
+      },
+      "creation": {
+        "capability_id": "A",
+        "node_id": "node",
+        "issued_at_unix_ms": "1000000",
+        "retention_seconds": 60,
+        "max_lob_bytes": "1024"
+      },
+      "current": {
+        "capability_id": "B",
+        "node_id": "other",
+        "session_id": "session",
+        "lob_read_supported": true,
+        "retention_seconds": 1,
+        "max_lob_bytes": "1"
+      },
+      "now_unix_ms": "1030000",
+      "lease_valid": true,
+      "readable": false,
+      "name": "different_node"
+    },
+    {
+      "reference": {
+        "lobId": "lob",
+        "type": "VALUE_TYPE_BLOB",
+        "sizeBytes": "512",
+        "sessionId": "session",
+        "expiresAtUnixMs": "1060000"
+      },
+      "creation": {
+        "capability_id": "A",
+        "node_id": "node",
+        "issued_at_unix_ms": "1000000",
+        "retention_seconds": 60,
+        "max_lob_bytes": "1024"
+      },
+      "current": {
+        "capability_id": "B",
+        "node_id": "node",
+        "session_id": "session",
+        "lob_read_supported": true,
+        "retention_seconds": 1,
+        "max_lob_bytes": "1"
+      },
+      "now_unix_ms": "1060000",
+      "lease_valid": true,
+      "readable": false,
+      "name": "expired"
+    },
+    {
+      "reference": {
+        "lobId": "lob",
+        "type": "VALUE_TYPE_BLOB",
+        "sizeBytes": "512",
+        "sessionId": "session",
+        "expiresAtUnixMs": "1060000"
+      },
+      "creation": {
+        "capability_id": "A",
+        "node_id": "node",
+        "issued_at_unix_ms": "1000000",
+        "retention_seconds": 60,
+        "max_lob_bytes": "1024"
+      },
+      "current": {
+        "capability_id": "B",
+        "node_id": "node",
+        "session_id": "session",
+        "lob_read_supported": true,
+        "retention_seconds": 1,
+        "max_lob_bytes": "1"
+      },
+      "now_unix_ms": "1030000",
+      "lease_valid": true,
+      "readable": false,
+      "name": "released",
+      "released": true
+    },
+    {
+      "reference": {
+        "lobId": "lob",
+        "type": "VALUE_TYPE_BLOB",
+        "sizeBytes": "512",
+        "sessionId": "session",
+        "expiresAtUnixMs": "1060000"
+      },
+      "creation": {
+        "capability_id": "A",
+        "node_id": "node",
+        "issued_at_unix_ms": "1000000",
+        "retention_seconds": 60,
+        "max_lob_bytes": "1024"
+      },
+      "current": {
+        "capability_id": "B",
+        "node_id": "node",
+        "session_id": "session",
+        "lob_read_supported": true,
+        "retention_seconds": 1,
+        "max_lob_bytes": "1"
+      },
+      "now_unix_ms": "1030000",
+      "lease_valid": true,
+      "readable": false,
+      "name": "session_closed",
+      "session_closed": true
+    },
+    {
+      "reference": {
+        "lobId": "lob",
+        "type": "VALUE_TYPE_BLOB",
+        "sizeBytes": "512",
+        "sessionId": "session",
+        "expiresAtUnixMs": "1060000"
+      },
+      "creation": {
+        "capability_id": "A",
+        "node_id": "node",
+        "issued_at_unix_ms": "1000000",
+        "retention_seconds": 60,
+        "max_lob_bytes": "1024"
+      },
+      "current": {
+        "capability_id": "B",
+        "node_id": "node",
+        "session_id": "session",
+        "lob_read_supported": true,
+        "retention_seconds": 1,
+        "max_lob_bytes": "1"
+      },
+      "now_unix_ms": "1030000",
+      "lease_valid": true,
+      "readable": false,
+      "name": "node_lost",
+      "node_lost": true
+    }
+  ]
+}

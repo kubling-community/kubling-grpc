@@ -85,6 +85,22 @@ enum ValueType {
 
   // XML document.
   VALUE_TYPE_XML = 21;
+
+  // Homogeneous array; element type is carried by TypeDescriptor/ArrayValue.
+  VALUE_TYPE_ARRAY = 22;
+}
+
+// Portable declared type. Message presence distinguishes inferred from declared
+// parameter types. UNKNOWN is not a valid explicitly declared type.
+// precision is positive and allowed only for BIGINTEGER/BIGDECIMAL. scale is
+// allowed only for BIGDECIMAL, requires precision, and must be <= precision.
+// Negative decimal scales are supported. All other types omit both qualifiers.
+message TypeDescriptor {
+  ValueType type = 1;
+  // Required only for ARRAY. Recursive descriptors describe nested arrays.
+  TypeDescriptor element_type = 2;
+  optional int32 precision = 3;
+  optional int32 scale = 4;
 }
 
 // Explicit null representation.
@@ -135,7 +151,46 @@ message Value {
     bytes geography_value = 21;
 
     string json_value = 22;
+
+    // Input variants activate their advertised feature by presence; output
+    // requires accepted_features. Legacy Query/Exec never emit these variants.
+    ArrayValue array_value = 23;
+    SpatialValue geometry_with_crs = 24;
+    SpatialValue geography_with_crs = 25;
+    LobReference lob_reference = 26;
   }
+}
+
+// Empty array is distinct from Value.null_value. Elements may be null, but all
+// non-null elements must match element_type. Ragged nested arrays are allowed.
+message ArrayValue {
+  TypeDescriptor element_type = 1;
+  repeated Value elements = 2;
+}
+
+// Plain WKB; no embedded SRID. Missing CRS/SRID means unknown, never EPSG:4326.
+// If only SRID is given it denotes an EPSG code. If both are supplied they must
+// identify the same CRS. No coordinate transformation is implied.
+message SpatialValue {
+  bytes wkb = 1;
+  optional int32 srid = 2;
+  // Authority-qualified code (e.g. EPSG:4326) or an absolute CRS URI.
+  optional string crs = 3;
+}
+
+// Immutable, session-scoped BLOB or UTF-8 CLOB, read through LobService.
+// References survive statement/transaction closure until expiry, explicit
+// release, session closure or node loss. Capability renewal does not invalidate
+// them. Resource pressure must reject new creations, never revoke issued leases.
+// IDs are opaque and are not bearer credentials.
+message LobReference {
+  string lob_id = 1;
+  ValueType type = 2;
+  // CLOB sizes and offsets are UTF-8 byte counts, not character counts.
+  optional uint64 size_bytes = 3;
+  string session_id = 4;
+  // Semantically required on every reference issued by Execute or WriteLob.
+  optional int64 expires_at_unix_ms = 5;
 }
 
 message BlobValue {

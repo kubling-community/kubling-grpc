@@ -239,13 +239,15 @@ var SessionService_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	QueryService_Exec_FullMethodName                = "/kubling.v1.QueryService/Exec"
-	QueryService_Query_FullMethodName               = "/kubling.v1.QueryService/Query"
-	QueryService_BeginTransaction_FullMethodName    = "/kubling.v1.QueryService/BeginTransaction"
-	QueryService_CommitTransaction_FullMethodName   = "/kubling.v1.QueryService/CommitTransaction"
-	QueryService_RollbackTransaction_FullMethodName = "/kubling.v1.QueryService/RollbackTransaction"
-	QueryService_IsInTransaction_FullMethodName     = "/kubling.v1.QueryService/IsInTransaction"
-	QueryService_GetServerInfo_FullMethodName       = "/kubling.v1.QueryService/GetServerInfo"
+	QueryService_Exec_FullMethodName                 = "/kubling.v1.QueryService/Exec"
+	QueryService_Query_FullMethodName                = "/kubling.v1.QueryService/Query"
+	QueryService_Execute_FullMethodName              = "/kubling.v1.QueryService/Execute"
+	QueryService_BeginTransaction_FullMethodName     = "/kubling.v1.QueryService/BeginTransaction"
+	QueryService_CommitTransaction_FullMethodName    = "/kubling.v1.QueryService/CommitTransaction"
+	QueryService_RollbackTransaction_FullMethodName  = "/kubling.v1.QueryService/RollbackTransaction"
+	QueryService_IsInTransaction_FullMethodName      = "/kubling.v1.QueryService/IsInTransaction"
+	QueryService_GetTransactionStatus_FullMethodName = "/kubling.v1.QueryService/GetTransactionStatus"
+	QueryService_GetServerInfo_FullMethodName        = "/kubling.v1.QueryService/GetServerInfo"
 )
 
 // QueryServiceClient is the client API for QueryService service.
@@ -266,6 +268,9 @@ type QueryServiceClient interface {
 	// Executes a SQL query and streams result batches.
 	// buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
 	Query(ctx context.Context, in *QueryRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[QueryBatch], error)
+	// Executes SQL once and reports its actual result kind. Requires
+	// generic_execute_v1; never probe statement kind by trying another SQL RPC.
+	Execute(ctx context.Context, in *ExecuteRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ExecuteResponse], error)
 	// Starts a transaction and returns a transaction identifier.
 	BeginTransaction(ctx context.Context, in *BeginTransactionRequest, opts ...grpc.CallOption) (*BeginTransactionResponse, error)
 	// Commits a transaction.
@@ -273,6 +278,8 @@ type QueryServiceClient interface {
 	// Rolls back a transaction.
 	RollbackTransaction(ctx context.Context, in *RollbackTransactionRequest, opts ...grpc.CallOption) (*RollbackTransactionResponse, error)
 	IsInTransaction(ctx context.Context, in *IsInTransactionRequest, opts ...grpc.CallOption) (*IsInTransactionResponse, error)
+	// Optional authoritative observation, gated by transaction_status_v1.
+	GetTransactionStatus(ctx context.Context, in *GetTransactionStatusRequest, opts ...grpc.CallOption) (*GetTransactionStatusResponse, error)
 	// Returns server metadata and capabilities.
 	GetServerInfo(ctx context.Context, in *GetServerInfoRequest, opts ...grpc.CallOption) (*GetServerInfoResponse, error)
 }
@@ -314,6 +321,25 @@ func (c *queryServiceClient) Query(ctx context.Context, in *QueryRequest, opts .
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type QueryService_QueryClient = grpc.ServerStreamingClient[QueryBatch]
 
+func (c *queryServiceClient) Execute(ctx context.Context, in *ExecuteRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ExecuteResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &QueryService_ServiceDesc.Streams[1], QueryService_Execute_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[ExecuteRequest, ExecuteResponse]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type QueryService_ExecuteClient = grpc.ServerStreamingClient[ExecuteResponse]
+
 func (c *queryServiceClient) BeginTransaction(ctx context.Context, in *BeginTransactionRequest, opts ...grpc.CallOption) (*BeginTransactionResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(BeginTransactionResponse)
@@ -354,6 +380,16 @@ func (c *queryServiceClient) IsInTransaction(ctx context.Context, in *IsInTransa
 	return out, nil
 }
 
+func (c *queryServiceClient) GetTransactionStatus(ctx context.Context, in *GetTransactionStatusRequest, opts ...grpc.CallOption) (*GetTransactionStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetTransactionStatusResponse)
+	err := c.cc.Invoke(ctx, QueryService_GetTransactionStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *queryServiceClient) GetServerInfo(ctx context.Context, in *GetServerInfoRequest, opts ...grpc.CallOption) (*GetServerInfoResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetServerInfoResponse)
@@ -382,6 +418,9 @@ type QueryServiceServer interface {
 	// Executes a SQL query and streams result batches.
 	// buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
 	Query(*QueryRequest, grpc.ServerStreamingServer[QueryBatch]) error
+	// Executes SQL once and reports its actual result kind. Requires
+	// generic_execute_v1; never probe statement kind by trying another SQL RPC.
+	Execute(*ExecuteRequest, grpc.ServerStreamingServer[ExecuteResponse]) error
 	// Starts a transaction and returns a transaction identifier.
 	BeginTransaction(context.Context, *BeginTransactionRequest) (*BeginTransactionResponse, error)
 	// Commits a transaction.
@@ -389,6 +428,8 @@ type QueryServiceServer interface {
 	// Rolls back a transaction.
 	RollbackTransaction(context.Context, *RollbackTransactionRequest) (*RollbackTransactionResponse, error)
 	IsInTransaction(context.Context, *IsInTransactionRequest) (*IsInTransactionResponse, error)
+	// Optional authoritative observation, gated by transaction_status_v1.
+	GetTransactionStatus(context.Context, *GetTransactionStatusRequest) (*GetTransactionStatusResponse, error)
 	// Returns server metadata and capabilities.
 	GetServerInfo(context.Context, *GetServerInfoRequest) (*GetServerInfoResponse, error)
 	mustEmbedUnimplementedQueryServiceServer()
@@ -407,6 +448,9 @@ func (UnimplementedQueryServiceServer) Exec(context.Context, *ExecRequest) (*Exe
 func (UnimplementedQueryServiceServer) Query(*QueryRequest, grpc.ServerStreamingServer[QueryBatch]) error {
 	return status.Error(codes.Unimplemented, "method Query not implemented")
 }
+func (UnimplementedQueryServiceServer) Execute(*ExecuteRequest, grpc.ServerStreamingServer[ExecuteResponse]) error {
+	return status.Error(codes.Unimplemented, "method Execute not implemented")
+}
 func (UnimplementedQueryServiceServer) BeginTransaction(context.Context, *BeginTransactionRequest) (*BeginTransactionResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method BeginTransaction not implemented")
 }
@@ -418,6 +462,9 @@ func (UnimplementedQueryServiceServer) RollbackTransaction(context.Context, *Rol
 }
 func (UnimplementedQueryServiceServer) IsInTransaction(context.Context, *IsInTransactionRequest) (*IsInTransactionResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method IsInTransaction not implemented")
+}
+func (UnimplementedQueryServiceServer) GetTransactionStatus(context.Context, *GetTransactionStatusRequest) (*GetTransactionStatusResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetTransactionStatus not implemented")
 }
 func (UnimplementedQueryServiceServer) GetServerInfo(context.Context, *GetServerInfoRequest) (*GetServerInfoResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetServerInfo not implemented")
@@ -471,6 +518,17 @@ func _QueryService_Query_Handler(srv interface{}, stream grpc.ServerStream) erro
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type QueryService_QueryServer = grpc.ServerStreamingServer[QueryBatch]
+
+func _QueryService_Execute_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ExecuteRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(QueryServiceServer).Execute(m, &grpc.GenericServerStream[ExecuteRequest, ExecuteResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type QueryService_ExecuteServer = grpc.ServerStreamingServer[ExecuteResponse]
 
 func _QueryService_BeginTransaction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(BeginTransactionRequest)
@@ -544,6 +602,24 @@ func _QueryService_IsInTransaction_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _QueryService_GetTransactionStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTransactionStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServiceServer).GetTransactionStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: QueryService_GetTransactionStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServiceServer).GetTransactionStatus(ctx, req.(*GetTransactionStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _QueryService_GetServerInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetServerInfoRequest)
 	if err := dec(in); err != nil {
@@ -590,6 +666,10 @@ var QueryService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _QueryService_IsInTransaction_Handler,
 		},
 		{
+			MethodName: "GetTransactionStatus",
+			Handler:    _QueryService_GetTransactionStatus_Handler,
+		},
+		{
 			MethodName: "GetServerInfo",
 			Handler:    _QueryService_GetServerInfo_Handler,
 		},
@@ -598,6 +678,11 @@ var QueryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "Query",
 			Handler:       _QueryService_Query_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "Execute",
+			Handler:       _QueryService_Execute_Handler,
 			ServerStreams: true,
 		},
 	},
