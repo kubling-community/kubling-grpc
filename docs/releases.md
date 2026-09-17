@@ -89,6 +89,23 @@ workflow accepts that token. Trusted Publishing is an alternative: register
 PyPI, replace the password input with OIDC, grant `id-token: write` only to the
 publish job, and enable attestations. Never store credentials in this repository.
 
+## Check signing credentials before release
+
+Run **Java signing check** manually on the intended branch after configuring the
+two GPG secrets. Once the workflow is on main, it can also be launched with:
+
+```sh
+gh workflow run java-signing.yml --ref main
+```
+
+The check builds and tests with GraalVM 25, runs the same Maven release profile
+through `verify`, and signs the POM, binary, sources and Javadoc JARs. It disables
+agent passphrase fallback so the configured secrets must work together. A fresh
+GPG keyring retrieves the public key from `keyserver.ubuntu.com` and verifies all
+four signatures. No package is uploaded and no release tag is required. This
+check validates signing credentials and public-key discoverability; registry
+token permissions are exercised during publication.
+
 ## Publish an approved version
 
 1. Set the intended version in `sdk-java/pom.xml` or `sdk-python/pyproject.toml`.
