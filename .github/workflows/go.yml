@@ -33,7 +33,9 @@ jobs:
         run: bash tools/bootstrap.sh
 
       - name: Generate Go SDK
-        run: bash generate.sh
+        run: |
+          bash generate.sh go
+          python3 tools/generate_features.py --language rust
 
       - name: Tidy Go module
         working-directory: sdk-go
@@ -41,11 +43,20 @@ jobs:
 
       - name: Verify generated sources are up to date
         run: |
-          if ! git diff --exit-code; then
+          python3 tools/generate_features.py --check --language go
+          python3 tools/generate_features.py --check --language rust
+          if ! git diff --exit-code -- sdk-go sdk-rust/features; then
             echo "::error::Generated Go sources or module files are not up to date."
             echo "::error::Run generate.sh and 'go mod tidy' locally, then commit the changes."
             exit 1
           fi
+          if [[ -n "$(git ls-files --others --exclude-standard -- sdk-go/kubling sdk-go/features sdk-rust/features)" ]]; then
+            echo "::error::New generated Go/Rust files must be committed."
+            exit 1
+          fi
+
+      - name: Validate feature registry and semantic cases
+        run: python3 -B -m unittest discover -s tools/tests -v
 
       - name: Build
         working-directory: sdk-go

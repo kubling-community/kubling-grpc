@@ -1,0 +1,121 @@
+name: Python client
+
+on:
+  push:
+    branches: [main]
+    tags: ['sdk-python/v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing sdk-python/vX.Y.Z tag to validate or publish'
+        required: true
+        type: string
+      publish:
+        description: 'Publish this release to PyPI'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: python-${{ inputs.tag || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    outputs:
+      commit: ${{ steps.source.outputs.commit }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 0
+      - id: source
+        run: echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: sdk-python/requirements-build.txt
+      - name: Install packaging tools
+        run: python -m pip install -r sdk-python/requirements-build.txt
+      - name: Validate release tag
+        if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          python tools/check_release.py python "$RELEASE_TAG"
+          test "$(git rev-parse HEAD)" = "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")"
+          git merge-base --is-ancestor HEAD origin/main
+      - name: Check contract
+        run: |
+          bash tools/bootstrap.sh
+          tools/bin/buf lint
+          tools/bin/buf breaking --against '.git#tag=sdk-go/v0.1.1'
+          python -B -m unittest discover -s tools/tests -v
+      - name: Build sdist and wheel from sdist
+        run: |
+          python -m build sdk-python
+          python -m twine check --strict sdk-python/dist/*
+          python tools/check_packages.py python
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-distributions
+          path: sdk-python/dist/*
+          if-no-files-found: error
+
+  validate:
+    needs: build
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        python: ['3.10', '3.14']
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.build.outputs.commit }}
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-distributions
+          path: dist
+      - name: Install wheel and test outside source tree
+        run: |
+          python -m pip install dist/*.whl
+          cd "$RUNNER_TEMP"
+          python -m unittest discover -s "$GITHUB_WORKSPACE/sdk-python/tests" -v
+      - name: Install optional rich-status support
+        run: |
+          wheel=(dist/*.whl)
+          python -m pip install "${wheel[0]}[status]"
+          python -c 'from grpc_status import rpc_status; from kubling.v1.error_pb2 import KublingError'
+      - name: Reinstall from sdist without repository generators
+        run: |
+          python -m pip uninstall -y kubling-grpc
+          python -m pip install dist/*.tar.gz
+          cd "$RUNNER_TEMP"
+          python -m unittest discover -s "$GITHUB_WORKSPACE/sdk-python/tests" -v
+
+  publish:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    needs: [build, validate]
+    runs-on: ubuntu-24.04
+    environment:
+      name: pypi
+      url: https://pypi.org/project/kubling-grpc/
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-distributions
+          path: dist
+      - name: Publish tested distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          attestations: false
