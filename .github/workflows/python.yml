@@ -58,7 +58,7 @@ jobs:
         run: |
           bash tools/bootstrap.sh
           tools/bin/buf lint
-          tools/bin/buf breaking --against '.git#tag=sdk-go/v0.1.1'
+          tools/bin/buf breaking --against '.git#tag=proto/v1.1.1'
           python -B -m unittest discover -s tools/tests -v
       - name: Build sdist and wheel from sdist
         run: |

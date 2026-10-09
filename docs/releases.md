@@ -16,11 +16,6 @@ one version and one source commit.
 | Java bindings and feature constants | No | Binary, sources and Javadoc JARs |
 | Python bindings and feature constants | No | Wheel and sdist |
 | Rust feature constants | Yes | No crate or binding pipeline yet |
-| Local audit notes and implementation tracking | No | Never included in packages |
-
-Keep private work notes in `.local-notes/`, which is ignored by Git. Public
-contract semantics, compatibility rules, acceptance scenarios and executable
-fixtures are project documentation/tests rather than implementation tracking.
 
 `generate.sh` accepts `all`, `go`, `java` or `python`. Each language has pinned
 Buf plugins; Java and Python outputs are cleaned before generation. Java's
@@ -60,13 +55,12 @@ Pull requests and pushes to main regenerate, build and test the Go SDK and build
 the Java/Python packages without publishing. Every workflow validates the root
 `VERSION` against the Java and Python manifests. Release tags also require all
 four coordinated tags to point to the same commit on main. Java compiles and
-runs tests with Oracle GraalVM 25 and produces Java 21 bytecode, following
-Kubling Core. CI checks both the build JDK and effective Maven compiler release,
-then inspects the packaged class versions. The Maven Wrapper also matches Core's
-Maven 3.9.0 / Wrapper 3.2.0. Python builds
+runs tests with Oracle GraalVM 25 and produces Java 21 bytecode. CI checks both
+the build JDK and effective Maven compiler release, then inspects the packaged
+class versions. The build uses Maven 3.9.0 and Maven Wrapper 3.2.0. Python builds
 an sdist and then a wheel from that sdist, and installs/tests both distributions
 outside the source tree on Python 3.10 and 3.14. Neither workflow needs publishing
-credentials during validation. Both check the contract against `sdk-go/v0.1.1`.
+credentials during validation. Both check the contract against the latest public `proto/v1.1.1` baseline.
 
 ```sh
 bash tools/check_java_build.sh
@@ -86,9 +80,8 @@ requirement for claiming runtime feature support.
 
 ## Registry configuration
 
-Configure these GitHub Actions secrets before publication. Java uses repository
-or organization secrets with the same names as Kubling Core; no additional Java
-environment is required. Python retains its `pypi` environment.
+Configure these GitHub Actions secrets before publication. Java accepts
+repository or organization secrets. Python uses its `pypi` environment.
 
 | Scope | Secrets |
 |---|---|
@@ -142,7 +135,7 @@ token permissions are exercised during publication.
 
    ```sh
    GOPROXY=https://proxy.golang.org go list -m \
-     github.com/kubling-community/kubling-grpc/sdk-go@v1.1.1
+     github.com/kubling-community/kubling-grpc/sdk-go@v1.2.0
    ```
 
 6. Verify BSR, Maven Central and PyPI independently. Announce the train only

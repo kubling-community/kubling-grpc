@@ -6,22 +6,26 @@ The SDK provides an idiomatic Go API that abstracts the underlying gRPC protocol
 
 ## Installation
 
-```bash copy
-go get github.com/kubling-community/kubling-grpc/sdk-go@v1.1.1
+```sh
+go get github.com/kubling-community/kubling-grpc/sdk-go@v1.2.0
 ```
 
-## Protocol 1.1 bindings
+## Protocol 1.2 bindings
 
-Version 1.1.1 includes the generated Protocol 1.1 API: generic `Execute`, server
-capabilities, structured errors, transaction status, arrays, spatial values and
-chunked LOB services. Shared negotiated feature names are available from the
-`features` package.
+Version 1.2.0 includes the generated Protocol 1.2 API: generic `Execute`, server
+capabilities, structured errors, negotiated partial-result warnings, transaction
+status, arrays, spatial values and chunked LOB services. Shared negotiated
+feature names are available from the `features` package.
 
 Use `Client.QueryService()` for the generated API. Before calling `Execute`, get
 the authenticated server information and verify `features.GenericExecuteV1`,
-the capability identity, limits and affinity requirements. The existing
-`result.Query` and `exec.Exec` helpers continue to call their original RPCs and
-never replay a failed statement through `Execute`.
+the capability identity, limits and affinity requirements. Accept
+`features.PartialResultsV1` only when consuming `ExecutionEnd.completeness` and
+its structured warnings. Use `WarningRole`, rather than warning code, message or
+position, to distinguish general diagnostics from partial-result causes;
+`allow_partial_results` remains the per-call policy. The existing `result.Query`
+and `exec.Exec` helpers continue to call their original RPCs and never replay a
+failed statement through `Execute`.
 
 # Connecting
 
@@ -29,9 +33,9 @@ never replay a failed statement through `Execute`.
 cli, err := client.NewClient(
     client.Options{
         Address:  "localhost:50051",
-        Username: "sa",
-        Password: "sa",
-        VDBName:  "ExampleVDB",
+        Username: "<username>",
+        Password: "<password>",
+        VDBName:  "<vdb-name>",
     },
 )
 if err != nil {

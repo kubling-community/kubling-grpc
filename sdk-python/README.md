@@ -3,13 +3,16 @@
 Generated messages, gRPC stubs and shared feature constants for the official
 Kubling protocol. Requires Python 3.10 or later. This package defines no DB-API,
 ORM or framework adapter behavior. Server support must be discovered through
-capabilities before using optional protocol features.
+capabilities before using optional protocol features. `PARTIAL_RESULTS_V1` gates
+terminal completeness and structured warnings. `WarningRole` distinguishes
+general diagnostics from partial-result causes; `allow_partial_results` is the
+per-call authorization for incomplete query data.
 
 Distribution name: `kubling-grpc`. Official releases share the canonical
 repository version; availability depends on a completed release to PyPI.
 
 ```sh
-pip install kubling-grpc==1.1.1
+pip install kubling-grpc==1.2.0
 ```
 
 ```python

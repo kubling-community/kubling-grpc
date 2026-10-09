@@ -30,15 +30,15 @@ class ReleaseVersionTests(unittest.TestCase):
                     check_release.release_version(root)
 
     def test_current_manifests_match_version(self):
-        self.assertEqual(check_release.validate_manifests(), "1.1.1")
+        self.assertEqual(check_release.validate_manifests(), "1.2.0")
 
     def test_each_tag_must_match_canonical_version(self):
         self.assertEqual(
-            check_release.validate_tag("go", "sdk-go/v1.1.1"),
-            "sdk-go/v1.1.1",
+            check_release.validate_tag("go", "sdk-go/v1.2.0"),
+            "sdk-go/v1.2.0",
         )
         with self.assertRaises(ValueError):
-            check_release.validate_tag("go", "sdk-go/v1.1.2")
+            check_release.validate_tag("go", "sdk-go/v1.2.1")
 
     @mock.patch("check_release.validate_manifests", return_value="1.1.1")
     @mock.patch("check_release.git", return_value="a" * 40)
