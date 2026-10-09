@@ -88,6 +88,14 @@ repository or organization secrets. Python uses its `pypi` environment.
 | Java repository / organization | `MAVEN_CENTRAL_USERNAME`, `MAVEN_CENTRAL_PASSWORD`, `MAVEN_GPG_PRIVATE_KEY`, `MAVEN_GPG_PASSPHRASE` |
 | `pypi` | `PYPI_API_TOKEN` |
 
+`DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` are optional and unrelated to
+publication. When both are configured, trusted workflows authenticate public
+image pulls to avoid consuming the anonymous quota shared by GitHub-hosted
+runners. Without them, including on pull requests from forks, the Docker-backed
+contract tests still run with anonymous public pulls. Authentication failures
+also fall back to anonymous pulls. If configured, use a read-only Docker Hub
+access token rather than an account password.
+
 Central credentials are a **Central Portal user token**, not an account password
 or an old OSSRH token. The account must own the `com.kubling` namespace. Use an
 ASCII-armored signing key whose public key is discoverable by Central. The
