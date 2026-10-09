@@ -16,9 +16,9 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func legacyMessage(t *testing.T, name protoreflect.FullName) *dynamicpb.Message {
+func descriptorMessage(t *testing.T, baseline string, name protoreflect.FullName) *dynamicpb.Message {
 	t.Helper()
-	data, err := os.ReadFile("testdata/legacy-v0.1.1.binpb")
+	data, err := os.ReadFile(baseline)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,6 +35,14 @@ func legacyMessage(t *testing.T, name protoreflect.FullName) *dynamicpb.Message 
 		t.Fatal(err)
 	}
 	return dynamicpb.NewMessage(descriptor.(protoreflect.MessageDescriptor))
+}
+
+func legacyMessage(t *testing.T, name protoreflect.FullName) *dynamicpb.Message {
+	return descriptorMessage(t, "testdata/legacy-v0.1.1.binpb", name)
+}
+
+func releasedMessage(t *testing.T, name protoreflect.FullName) *dynamicpb.Message {
+	return descriptorMessage(t, "testdata/released-v1.1.1.binpb", name)
 }
 
 func transcode(t *testing.T, source, target proto.Message) {
@@ -147,6 +155,56 @@ func TestLegacyServerInfoDoesNotInventCapabilities(t *testing.T) {
 	transcode(t, legacy, &current)
 	if current.Capabilities != nil || len(current.Features) != 0 || current.ServerVersion != "26.1" {
 		t.Fatal("legacy product version must not imply new capability support")
+	}
+}
+
+func TestV111ReaderForwardsNegotiatedExecutionOutcome(t *testing.T) {
+	resultID := uint64(1)
+	current := &kublingv1.ExecutionEnd{
+		ResultCount:  1,
+		Completeness: kublingv1.ExecutionCompleteness_EXECUTION_COMPLETENESS_PARTIAL,
+		Warnings: []*kublingv1.KublingWarning{{
+			StableCode: "KBL_SOURCE_RESULT_OMITTED",
+			Message:    "Some sources were omitted",
+			Role:       kublingv1.WarningRole_WARNING_ROLE_PARTIAL_RESULT_CAUSE,
+			VendorCode: proto.Int32(0),
+			Context: &kublingv1.WarningContext{
+				ResultId: proto.Uint64(resultID),
+				SourceId: proto.String("inventory-source"),
+			},
+			OccurrenceCount:                100,
+			AffectedResourceIds:            []string{"bmc-1", "bmc-2"},
+			OmittedAffectedResourceIdCount: 98,
+		}},
+		OmittedWarningCount: 2,
+	}
+	released := releasedMessage(t, "kubling.v1.ExecutionEnd")
+	transcode(t, current, released)
+	if got := released.Get(released.Descriptor().Fields().ByName("result_count")).Uint(); got != 1 {
+		t.Fatalf("v1.1.1 reader lost result_count: %d", got)
+	}
+	if len(released.GetUnknown()) == 0 {
+		t.Fatal("v1.1.1 reader lost additive completeness and warnings")
+	}
+	var restored kublingv1.ExecutionEnd
+	transcode(t, released, &restored)
+	if !proto.Equal(current, &restored) || restored.Warnings[0].VendorCode == nil {
+		t.Fatal("v1.1.1 forwarding lost negotiated outcome fields or explicit vendor zero")
+	}
+
+	request := &kublingv1.ExecuteRequest{
+		AcceptedFeatures:    []string{"partial_results_v1"},
+		AllowPartialResults: true,
+	}
+	oldRequest := releasedMessage(t, "kubling.v1.ExecuteRequest")
+	transcode(t, request, oldRequest)
+	if len(oldRequest.GetUnknown()) == 0 {
+		t.Fatal("v1.1.1 reader lost additive partial-result authorization")
+	}
+	var restoredRequest kublingv1.ExecuteRequest
+	transcode(t, oldRequest, &restoredRequest)
+	if !proto.Equal(request, &restoredRequest) {
+		t.Fatal("v1.1.1 forwarding lost partial-result authorization")
 	}
 }
 

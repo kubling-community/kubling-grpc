@@ -15,7 +15,8 @@ effects from an RPC status. Use deterministic server versions, not `latest`.
 | C06 | Missing generic_execute_v1 and statement kind unknown | Local unsupported error; zero SQL executions |
 | C07 | Missing generic_execute_v1 and caller supplies known kind | Exactly one appropriate legacy RPC; no alternate RPC after failure |
 | C08 | Execute fails before or after first response | No automatic Query/Exec replay; at most the original submitted execution |
-| E01 | SELECT with zero rows | Schema, End(0), ExecutionEnd, gRPC OK |
+| C09 | v1.1.1 Execute client calls a server supporting partial_results_v1 | Strict behavior; no successful PARTIAL terminal event; additive fields survive old/new wire forwarding |
+| E01 | SELECT with zero rows | Schema, End(0), negotiated ExecutionEnd(COMPLETE), gRPC OK |
 | E02 | Rows span several batches, exact boundary, final short batch | All rows exactly once, stable schema, matching end count |
 | E03 | UPDATE affects zero rows | Present affected_rows=0, distinct from unknown count |
 | E04 | Engine cannot determine update count | Explicit unknown alternative, not zero or negative sentinel |
@@ -25,8 +26,23 @@ effects from an RPC status. Use deterministic server versions, not `latest`.
 | E08 | Procedure with multiple primary results | Monotonic IDs and correct order only with accepted multiple_results_v1 |
 | E08b | Additional primary result without acceptance | Explicit non-OK outcome, no silent discard/replay or assumed rollback |
 | E09 | Future/unknown event, wrong ID, missing schema/end, wrong row width | Client rejects incomplete/invalid stream; never marks success |
-| E10 | Stream fails after some rows or after an update | Partial results remain partial; final error visible, no assumed rollback |
-| E11 | ExecutionEnd then transport failure; OK without ExecutionEnd | Client does not report successful complete execution |
+| E10 | Stream fails after some rows or after an update | Delivered output remains unsuccessful; final error visible, no assumed rollback or successful PARTIAL |
+| E11 | ExecutionEnd then transport failure; OK without ExecutionEnd | Client does not report successful execution of either completeness kind |
+| W01 | Negotiated COMPLETE with no warnings | ExecutionEnd(COMPLETE) followed by gRPC OK |
+| W02 | Negotiated COMPLETE with GENERAL warning | Structured bounded warning retained; completeness remains COMPLETE; gRPC OK |
+| W03 | Query loses one or more sources with feature accepted and allow_partial_results=true | ExecutionEnd(PARTIAL) with at least one PARTIAL_RESULT_CAUSE warning, then gRPC OK |
+| W04 | Query would be partial with false/absent authorization or feature not accepted | No ExecutionEnd; non-OK; already delivered rows are unsuccessful |
+| W05 | allow_partial_results=true without accepted/advertised partial_results_v1 | Rejected before SQL with sql_executed=false and independently verified zero effects |
+| W06 | Accepted partial_results_v1 but ExecutionEnd completeness is UNSPECIFIED/unknown | Client rejects the terminal event as a protocol error |
+| W07 | PARTIAL has only omitted_warning_count, only GENERAL warnings, or otherwise lacks a retained PARTIAL_RESULT_CAUSE warning | Protocol error; truncation never removes every typed explanation |
+| W08 | Warning/resource counts and response bytes at limit and limit+1 | Retained entries stay within all limits; omitted counts exact; no oversized successful ExecutionEnd |
+| W09 | Unknown future warning stable code/fields and warning order changes | Known fields remain usable; no message/code/position-based classification or failure solely for an unknown code |
+| W10 | Multiple results contain a partial query and complete updates | Overall PARTIAL only when every update/key outcome is authoritative; any incomplete mutation fails non-OK |
+| W11 | COUNT, AVG, ORDER BY, LIMIT or other derived query loses source data | Overall result remains PARTIAL; no inference that derived values are complete |
+| W12 | Legacy Query or Exec encounters incomplete execution | No successful partial representation and no semantic/wire change to the legacy RPC |
+| W13 | Negotiated warning role is UNSPECIFIED or unknown | Client rejects the terminal event; it does not infer a role from stable_code, message or position |
+| W14 | COMPLETE contains PARTIAL_RESULT_CAUSE | Client rejects the inconsistent terminal event |
+| W15 | PARTIAL contains GENERAL and PARTIAL_RESULT_CAUSE warnings | Overall PARTIAL; clients preserve both and identify the cause only by role |
 | P01 | Typed null for each supported scalar and array type | Declared type retained despite null value |
 | P02 | Explicit UNKNOWN type, inconsistent value/type, missing value with type | Structured validation error before SQL |
 | P03 | Old server silently ignores declared_type | Client does not rely on typed-null semantics without verified feature |
@@ -87,7 +103,7 @@ effects from an RPC status. Use deterministic server versions, not `latest`.
 | X02 | Deadline while waiting for a slow consumer | Cancellation reaches engine; bounded rows and bytes; no unlimited batch/chunk queue |
 | X03 | Statement cancellation with otherwise usable session | Session remains usable; affected transaction outcome UNKNOWN unless independently observed |
 | R05 | Pre-SQL capability/affinity/feature/parameter validation failure | Nonempty stable_code and present sql_executed=false; status/error message is not used as proof |
-| R06 | Error after partial results | Non-OK, no ExecutionEnd; sql_executed=true if execution is known to have started, otherwise absent |
+| R06 | Error after rows or results were emitted | Non-OK, no ExecutionEnd; sql_executed=true if execution is known to have started, otherwise absent |
 | R07 | Old status reader receives unknown KublingError Any | Standard gRPC status remains usable without understanding the detail |
 | R08 | Infrastructure error without KublingError; absent sql_executed vs false | No inferred retryability, pre-execution guarantee or transaction outcome |
 

@@ -4,6 +4,7 @@ package features
 
 const (
 	GenericExecuteV1    = "generic_execute_v1"
+	PartialResultsV1    = "partial_results_v1"
 	TypedParametersV1   = "typed_parameters_v1"
 	StructuredErrorsV1  = "structured_errors_v1"
 	TransactionIdsV1    = "transaction_ids_v1"

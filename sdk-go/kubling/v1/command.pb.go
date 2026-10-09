@@ -70,6 +70,55 @@ func (ResultSetRole) EnumDescriptor() ([]byte, []int) {
 	return file_kubling_v1_command_proto_rawDescGZIP(), []int{0}
 }
 
+type ExecutionCompleteness int32
+
+const (
+	ExecutionCompleteness_EXECUTION_COMPLETENESS_UNSPECIFIED ExecutionCompleteness = 0
+	ExecutionCompleteness_EXECUTION_COMPLETENESS_COMPLETE    ExecutionCompleteness = 1
+	ExecutionCompleteness_EXECUTION_COMPLETENESS_PARTIAL     ExecutionCompleteness = 2
+)
+
+// Enum value maps for ExecutionCompleteness.
+var (
+	ExecutionCompleteness_name = map[int32]string{
+		0: "EXECUTION_COMPLETENESS_UNSPECIFIED",
+		1: "EXECUTION_COMPLETENESS_COMPLETE",
+		2: "EXECUTION_COMPLETENESS_PARTIAL",
+	}
+	ExecutionCompleteness_value = map[string]int32{
+		"EXECUTION_COMPLETENESS_UNSPECIFIED": 0,
+		"EXECUTION_COMPLETENESS_COMPLETE":    1,
+		"EXECUTION_COMPLETENESS_PARTIAL":     2,
+	}
+)
+
+func (x ExecutionCompleteness) Enum() *ExecutionCompleteness {
+	p := new(ExecutionCompleteness)
+	*p = x
+	return p
+}
+
+func (x ExecutionCompleteness) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ExecutionCompleteness) Descriptor() protoreflect.EnumDescriptor {
+	return file_kubling_v1_command_proto_enumTypes[1].Descriptor()
+}
+
+func (ExecutionCompleteness) Type() protoreflect.EnumType {
+	return &file_kubling_v1_command_proto_enumTypes[1]
+}
+
+func (x ExecutionCompleteness) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ExecutionCompleteness.Descriptor instead.
+func (ExecutionCompleteness) EnumDescriptor() ([]byte, []int) {
+	return file_kubling_v1_command_proto_rawDescGZIP(), []int{1}
+}
+
 type LoginRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	VdbName         string                 `protobuf:"bytes,1,opt,name=vdb_name,json=vdbName,proto3" json:"vdb_name,omitempty"`
@@ -1038,8 +1087,12 @@ type ExecuteRequest struct {
 	// and declared_type activate their features by presence, not by this list.
 	// See protocol/features.json. Unknown/unavailable features fail before SQL.
 	AcceptedFeatures []string `protobuf:"bytes,8,rep,name=accepted_features,json=acceptedFeatures,proto3" json:"accepted_features,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	// Per-execution authorization for incomplete query results. False preserves
+	// strict behavior. True requires advertised and accepted partial_results_v1
+	// and is rejected before SQL otherwise.
+	AllowPartialResults bool `protobuf:"varint,9,opt,name=allow_partial_results,json=allowPartialResults,proto3" json:"allow_partial_results,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
 }
 
 func (x *ExecuteRequest) Reset() {
@@ -1126,6 +1179,13 @@ func (x *ExecuteRequest) GetAcceptedFeatures() []string {
 		return x.AcceptedFeatures
 	}
 	return nil
+}
+
+func (x *ExecuteRequest) GetAllowPartialResults() bool {
+	if x != nil {
+		return x.AllowPartialResults
+	}
+	return false
 }
 
 // Ordered event stream; see docs/client-contract-v1.md for the state machine.
@@ -1615,11 +1675,21 @@ func (x *ResultSetEnd) GetRowCount() uint64 {
 // or error emits no ExecutionEnd; propagate cancellation and close execution
 // resources. A race after completion may still lose the final transport status.
 type ExecutionEnd struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ResultCount   uint64                 `protobuf:"varint,1,opt,name=result_count,json=resultCount,proto3" json:"result_count,omitempty"`
-	Transaction   *TransactionStatus     `protobuf:"bytes,2,opt,name=transaction,proto3" json:"transaction,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	ResultCount uint64                 `protobuf:"varint,1,opt,name=result_count,json=resultCount,proto3" json:"result_count,omitempty"`
+	Transaction *TransactionStatus     `protobuf:"bytes,2,opt,name=transaction,proto3" json:"transaction,omitempty"`
+	// Must be COMPLETE or PARTIAL when partial_results_v1 was accepted. A server
+	// omits this negotiated representation for legacy clients.
+	Completeness ExecutionCompleteness `protobuf:"varint,3,opt,name=completeness,proto3,enum=kubling.v1.ExecutionCompleteness" json:"completeness,omitempty"`
+	// Bounded terminal diagnostics. COMPLETE may have GENERAL warnings. PARTIAL
+	// requires at least one retained PARTIAL_RESULT_CAUSE warning even when
+	// further warnings are omitted.
+	Warnings []*KublingWarning `protobuf:"bytes,4,rep,name=warnings,proto3" json:"warnings,omitempty"`
+	// Number of additional warning records omitted after bounded aggregation.
+	// This count never substitutes the cause warning required by PARTIAL.
+	OmittedWarningCount uint64 `protobuf:"varint,5,opt,name=omitted_warning_count,json=omittedWarningCount,proto3" json:"omitted_warning_count,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
 }
 
 func (x *ExecutionEnd) Reset() {
@@ -1664,6 +1734,27 @@ func (x *ExecutionEnd) GetTransaction() *TransactionStatus {
 		return x.Transaction
 	}
 	return nil
+}
+
+func (x *ExecutionEnd) GetCompleteness() ExecutionCompleteness {
+	if x != nil {
+		return x.Completeness
+	}
+	return ExecutionCompleteness_EXECUTION_COMPLETENESS_UNSPECIFIED
+}
+
+func (x *ExecutionEnd) GetWarnings() []*KublingWarning {
+	if x != nil {
+		return x.Warnings
+	}
+	return nil
+}
+
+func (x *ExecutionEnd) GetOmittedWarningCount() uint64 {
+	if x != nil {
+		return x.OmittedWarningCount
+	}
+	return 0
 }
 
 // Transaction start request.
@@ -2293,7 +2384,7 @@ var File_kubling_v1_command_proto protoreflect.FileDescriptor
 const file_kubling_v1_command_proto_rawDesc = "" +
 	"\n" +
 	"\x18kubling/v1/command.proto\x12\n" +
-	"kubling.v1\x1a\x1bkubling/v1/capability.proto\x1a\x1ckubling/v1/transaction.proto\x1a\x16kubling/v1/value.proto\"\xb6\x02\n" +
+	"kubling.v1\x1a\x1bkubling/v1/capability.proto\x1a\x1ckubling/v1/transaction.proto\x1a\x16kubling/v1/value.proto\x1a\x18kubling/v1/warning.proto\"\xb6\x02\n" +
 	"\fLoginRequest\x12\x19\n" +
 	"\bvdb_name\x18\x01 \x01(\tR\avdbName\x12\x1f\n" +
 	"\vvdb_version\x18\x02 \x01(\tR\n" +
@@ -2376,7 +2467,7 @@ const file_kubling_v1_command_proto_rawDesc = "" +
 	"\n" +
 	"QueryBatch\x12,\n" +
 	"\acolumns\x18\x01 \x03(\v2\x12.kubling.v1.ColumnR\acolumns\x12#\n" +
-	"\x04rows\x18\x02 \x03(\v2\x0f.kubling.v1.RowR\x04rows\"\xc4\x02\n" +
+	"\x04rows\x18\x02 \x03(\v2\x0f.kubling.v1.RowR\x04rows\"\xf8\x02\n" +
 	"\x0eExecuteRequest\x12%\n" +
 	"\x0eexpiring_token\x18\x01 \x01(\tR\rexpiringToken\x12\x10\n" +
 	"\x03sql\x18\x02 \x01(\tR\x03sql\x12-\n" +
@@ -2386,7 +2477,8 @@ const file_kubling_v1_command_proto_rawDesc = "" +
 	"batch_size\x18\x05 \x01(\rR\tbatchSize\x122\n" +
 	"\x15return_generated_keys\x18\x06 \x01(\bR\x13returnGeneratedKeys\x12#\n" +
 	"\rcapability_id\x18\a \x01(\tR\fcapabilityId\x12+\n" +
-	"\x11accepted_features\x18\b \x03(\tR\x10acceptedFeatures\"\xe1\x02\n" +
+	"\x11accepted_features\x18\b \x03(\tR\x10acceptedFeatures\x122\n" +
+	"\x15allow_partial_results\x18\t \x01(\bR\x13allowPartialResults\"\xe1\x02\n" +
 	"\x0fExecuteResponse\x12F\n" +
 	"\x10result_set_start\x18\x01 \x01(\v2\x1a.kubling.v1.ResultSetStartH\x00R\x0eresultSetStart\x129\n" +
 	"\vresult_rows\x18\x02 \x01(\v2\x16.kubling.v1.ResultRowsH\x00R\n" +
@@ -2415,10 +2507,13 @@ const file_kubling_v1_command_proto_rawDesc = "" +
 	"\x06counts\x18\x02 \x03(\v2\x17.kubling.v1.UpdateCountR\x06counts\"H\n" +
 	"\fResultSetEnd\x12\x1b\n" +
 	"\tresult_id\x18\x01 \x01(\x04R\bresultId\x12\x1b\n" +
-	"\trow_count\x18\x02 \x01(\x04R\browCount\"r\n" +
+	"\trow_count\x18\x02 \x01(\x04R\browCount\"\xa5\x02\n" +
 	"\fExecutionEnd\x12!\n" +
 	"\fresult_count\x18\x01 \x01(\x04R\vresultCount\x12?\n" +
-	"\vtransaction\x18\x02 \x01(\v2\x1d.kubling.v1.TransactionStatusR\vtransaction\"@\n" +
+	"\vtransaction\x18\x02 \x01(\v2\x1d.kubling.v1.TransactionStatusR\vtransaction\x12E\n" +
+	"\fcompleteness\x18\x03 \x01(\x0e2!.kubling.v1.ExecutionCompletenessR\fcompleteness\x126\n" +
+	"\bwarnings\x18\x04 \x03(\v2\x1a.kubling.v1.KublingWarningR\bwarnings\x122\n" +
+	"\x15omitted_warning_count\x18\x05 \x01(\x04R\x13omittedWarningCount\"@\n" +
 	"\x17BeginTransactionRequest\x12%\n" +
 	"\x0eexpiring_token\x18\x01 \x01(\tR\rexpiringToken\"s\n" +
 	"\x18BeginTransactionResponse\x12%\n" +
@@ -2455,7 +2550,11 @@ const file_kubling_v1_command_proto_rawDesc = "" +
 	"\rResultSetRole\x12\x1f\n" +
 	"\x1bRESULT_SET_ROLE_UNSPECIFIED\x10\x00\x12\x19\n" +
 	"\x15RESULT_SET_ROLE_QUERY\x10\x01\x12\"\n" +
-	"\x1eRESULT_SET_ROLE_GENERATED_KEYS\x10\x022\x9a\x02\n" +
+	"\x1eRESULT_SET_ROLE_GENERATED_KEYS\x10\x02*\x88\x01\n" +
+	"\x15ExecutionCompleteness\x12&\n" +
+	"\"EXECUTION_COMPLETENESS_UNSPECIFIED\x10\x00\x12#\n" +
+	"\x1fEXECUTION_COMPLETENESS_COMPLETE\x10\x01\x12\"\n" +
+	"\x1eEXECUTION_COMPLETENESS_PARTIAL\x10\x022\x9a\x02\n" +
 	"\x0eSessionService\x12<\n" +
 	"\x05Login\x12\x18.kubling.v1.LoginRequest\x1a\x19.kubling.v1.LoginResponse\x12?\n" +
 	"\x06Logout\x12\x19.kubling.v1.LogoutRequest\x1a\x1a.kubling.v1.LogoutResponse\x129\n" +
@@ -2485,116 +2584,120 @@ func file_kubling_v1_command_proto_rawDescGZIP() []byte {
 	return file_kubling_v1_command_proto_rawDescData
 }
 
-var file_kubling_v1_command_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_kubling_v1_command_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_kubling_v1_command_proto_msgTypes = make([]protoimpl.MessageInfo, 38)
 var file_kubling_v1_command_proto_goTypes = []any{
 	(ResultSetRole)(0),                   // 0: kubling.v1.ResultSetRole
-	(*LoginRequest)(nil),                 // 1: kubling.v1.LoginRequest
-	(*LoginResponse)(nil),                // 2: kubling.v1.LoginResponse
-	(*LogoutRequest)(nil),                // 3: kubling.v1.LogoutRequest
-	(*LogoutResponse)(nil),               // 4: kubling.v1.LogoutResponse
-	(*PingRequest)(nil),                  // 5: kubling.v1.PingRequest
-	(*PingResponse)(nil),                 // 6: kubling.v1.PingResponse
-	(*SessionPingRequest)(nil),           // 7: kubling.v1.SessionPingRequest
-	(*SessionPingResponse)(nil),          // 8: kubling.v1.SessionPingResponse
-	(*Parameter)(nil),                    // 9: kubling.v1.Parameter
-	(*ExecRequest)(nil),                  // 10: kubling.v1.ExecRequest
-	(*ExecResponse)(nil),                 // 11: kubling.v1.ExecResponse
-	(*QueryRequest)(nil),                 // 12: kubling.v1.QueryRequest
-	(*Column)(nil),                       // 13: kubling.v1.Column
-	(*Row)(nil),                          // 14: kubling.v1.Row
-	(*QueryBatch)(nil),                   // 15: kubling.v1.QueryBatch
-	(*ExecuteRequest)(nil),               // 16: kubling.v1.ExecuteRequest
-	(*ExecuteResponse)(nil),              // 17: kubling.v1.ExecuteResponse
-	(*ResultSetStart)(nil),               // 18: kubling.v1.ResultSetStart
-	(*ResultRows)(nil),                   // 19: kubling.v1.ResultRows
-	(*UnknownUpdateCount)(nil),           // 20: kubling.v1.UnknownUpdateCount
-	(*UpdateCount)(nil),                  // 21: kubling.v1.UpdateCount
-	(*UpdateResult)(nil),                 // 22: kubling.v1.UpdateResult
-	(*ResultSetEnd)(nil),                 // 23: kubling.v1.ResultSetEnd
-	(*ExecutionEnd)(nil),                 // 24: kubling.v1.ExecutionEnd
-	(*BeginTransactionRequest)(nil),      // 25: kubling.v1.BeginTransactionRequest
-	(*BeginTransactionResponse)(nil),     // 26: kubling.v1.BeginTransactionResponse
-	(*CommitTransactionRequest)(nil),     // 27: kubling.v1.CommitTransactionRequest
-	(*CommitTransactionResponse)(nil),    // 28: kubling.v1.CommitTransactionResponse
-	(*RollbackTransactionRequest)(nil),   // 29: kubling.v1.RollbackTransactionRequest
-	(*RollbackTransactionResponse)(nil),  // 30: kubling.v1.RollbackTransactionResponse
-	(*IsInTransactionRequest)(nil),       // 31: kubling.v1.IsInTransactionRequest
-	(*IsInTransactionResponse)(nil),      // 32: kubling.v1.IsInTransactionResponse
-	(*GetTransactionStatusRequest)(nil),  // 33: kubling.v1.GetTransactionStatusRequest
-	(*GetTransactionStatusResponse)(nil), // 34: kubling.v1.GetTransactionStatusResponse
-	(*GetServerInfoRequest)(nil),         // 35: kubling.v1.GetServerInfoRequest
-	(*GetServerInfoResponse)(nil),        // 36: kubling.v1.GetServerInfoResponse
-	nil,                                  // 37: kubling.v1.LoginRequest.PropertiesEntry
-	nil,                                  // 38: kubling.v1.LoginResponse.PropertiesEntry
-	(*Affinity)(nil),                     // 39: kubling.v1.Affinity
-	(*Value)(nil),                        // 40: kubling.v1.Value
-	(*TypeDescriptor)(nil),               // 41: kubling.v1.TypeDescriptor
-	(*TransactionStatus)(nil),            // 42: kubling.v1.TransactionStatus
-	(*Capabilities)(nil),                 // 43: kubling.v1.Capabilities
+	(ExecutionCompleteness)(0),           // 1: kubling.v1.ExecutionCompleteness
+	(*LoginRequest)(nil),                 // 2: kubling.v1.LoginRequest
+	(*LoginResponse)(nil),                // 3: kubling.v1.LoginResponse
+	(*LogoutRequest)(nil),                // 4: kubling.v1.LogoutRequest
+	(*LogoutResponse)(nil),               // 5: kubling.v1.LogoutResponse
+	(*PingRequest)(nil),                  // 6: kubling.v1.PingRequest
+	(*PingResponse)(nil),                 // 7: kubling.v1.PingResponse
+	(*SessionPingRequest)(nil),           // 8: kubling.v1.SessionPingRequest
+	(*SessionPingResponse)(nil),          // 9: kubling.v1.SessionPingResponse
+	(*Parameter)(nil),                    // 10: kubling.v1.Parameter
+	(*ExecRequest)(nil),                  // 11: kubling.v1.ExecRequest
+	(*ExecResponse)(nil),                 // 12: kubling.v1.ExecResponse
+	(*QueryRequest)(nil),                 // 13: kubling.v1.QueryRequest
+	(*Column)(nil),                       // 14: kubling.v1.Column
+	(*Row)(nil),                          // 15: kubling.v1.Row
+	(*QueryBatch)(nil),                   // 16: kubling.v1.QueryBatch
+	(*ExecuteRequest)(nil),               // 17: kubling.v1.ExecuteRequest
+	(*ExecuteResponse)(nil),              // 18: kubling.v1.ExecuteResponse
+	(*ResultSetStart)(nil),               // 19: kubling.v1.ResultSetStart
+	(*ResultRows)(nil),                   // 20: kubling.v1.ResultRows
+	(*UnknownUpdateCount)(nil),           // 21: kubling.v1.UnknownUpdateCount
+	(*UpdateCount)(nil),                  // 22: kubling.v1.UpdateCount
+	(*UpdateResult)(nil),                 // 23: kubling.v1.UpdateResult
+	(*ResultSetEnd)(nil),                 // 24: kubling.v1.ResultSetEnd
+	(*ExecutionEnd)(nil),                 // 25: kubling.v1.ExecutionEnd
+	(*BeginTransactionRequest)(nil),      // 26: kubling.v1.BeginTransactionRequest
+	(*BeginTransactionResponse)(nil),     // 27: kubling.v1.BeginTransactionResponse
+	(*CommitTransactionRequest)(nil),     // 28: kubling.v1.CommitTransactionRequest
+	(*CommitTransactionResponse)(nil),    // 29: kubling.v1.CommitTransactionResponse
+	(*RollbackTransactionRequest)(nil),   // 30: kubling.v1.RollbackTransactionRequest
+	(*RollbackTransactionResponse)(nil),  // 31: kubling.v1.RollbackTransactionResponse
+	(*IsInTransactionRequest)(nil),       // 32: kubling.v1.IsInTransactionRequest
+	(*IsInTransactionResponse)(nil),      // 33: kubling.v1.IsInTransactionResponse
+	(*GetTransactionStatusRequest)(nil),  // 34: kubling.v1.GetTransactionStatusRequest
+	(*GetTransactionStatusResponse)(nil), // 35: kubling.v1.GetTransactionStatusResponse
+	(*GetServerInfoRequest)(nil),         // 36: kubling.v1.GetServerInfoRequest
+	(*GetServerInfoResponse)(nil),        // 37: kubling.v1.GetServerInfoResponse
+	nil,                                  // 38: kubling.v1.LoginRequest.PropertiesEntry
+	nil,                                  // 39: kubling.v1.LoginResponse.PropertiesEntry
+	(*Affinity)(nil),                     // 40: kubling.v1.Affinity
+	(*Value)(nil),                        // 41: kubling.v1.Value
+	(*TypeDescriptor)(nil),               // 42: kubling.v1.TypeDescriptor
+	(*TransactionStatus)(nil),            // 43: kubling.v1.TransactionStatus
+	(*KublingWarning)(nil),               // 44: kubling.v1.KublingWarning
+	(*Capabilities)(nil),                 // 45: kubling.v1.Capabilities
 }
 var file_kubling_v1_command_proto_depIdxs = []int32{
-	37, // 0: kubling.v1.LoginRequest.properties:type_name -> kubling.v1.LoginRequest.PropertiesEntry
-	38, // 1: kubling.v1.LoginResponse.properties:type_name -> kubling.v1.LoginResponse.PropertiesEntry
-	39, // 2: kubling.v1.LoginResponse.affinity:type_name -> kubling.v1.Affinity
-	40, // 3: kubling.v1.Parameter.value:type_name -> kubling.v1.Value
-	41, // 4: kubling.v1.Parameter.declared_type:type_name -> kubling.v1.TypeDescriptor
-	9,  // 5: kubling.v1.ExecRequest.params:type_name -> kubling.v1.Parameter
-	15, // 6: kubling.v1.ExecResponse.generated_keys:type_name -> kubling.v1.QueryBatch
-	9,  // 7: kubling.v1.QueryRequest.params:type_name -> kubling.v1.Parameter
-	41, // 8: kubling.v1.Column.declared_type:type_name -> kubling.v1.TypeDescriptor
-	40, // 9: kubling.v1.Row.values:type_name -> kubling.v1.Value
-	13, // 10: kubling.v1.QueryBatch.columns:type_name -> kubling.v1.Column
-	14, // 11: kubling.v1.QueryBatch.rows:type_name -> kubling.v1.Row
-	9,  // 12: kubling.v1.ExecuteRequest.params:type_name -> kubling.v1.Parameter
-	18, // 13: kubling.v1.ExecuteResponse.result_set_start:type_name -> kubling.v1.ResultSetStart
-	19, // 14: kubling.v1.ExecuteResponse.result_rows:type_name -> kubling.v1.ResultRows
-	22, // 15: kubling.v1.ExecuteResponse.update_result:type_name -> kubling.v1.UpdateResult
-	23, // 16: kubling.v1.ExecuteResponse.result_set_end:type_name -> kubling.v1.ResultSetEnd
-	24, // 17: kubling.v1.ExecuteResponse.execution_end:type_name -> kubling.v1.ExecutionEnd
-	13, // 18: kubling.v1.ResultSetStart.columns:type_name -> kubling.v1.Column
+	38, // 0: kubling.v1.LoginRequest.properties:type_name -> kubling.v1.LoginRequest.PropertiesEntry
+	39, // 1: kubling.v1.LoginResponse.properties:type_name -> kubling.v1.LoginResponse.PropertiesEntry
+	40, // 2: kubling.v1.LoginResponse.affinity:type_name -> kubling.v1.Affinity
+	41, // 3: kubling.v1.Parameter.value:type_name -> kubling.v1.Value
+	42, // 4: kubling.v1.Parameter.declared_type:type_name -> kubling.v1.TypeDescriptor
+	10, // 5: kubling.v1.ExecRequest.params:type_name -> kubling.v1.Parameter
+	16, // 6: kubling.v1.ExecResponse.generated_keys:type_name -> kubling.v1.QueryBatch
+	10, // 7: kubling.v1.QueryRequest.params:type_name -> kubling.v1.Parameter
+	42, // 8: kubling.v1.Column.declared_type:type_name -> kubling.v1.TypeDescriptor
+	41, // 9: kubling.v1.Row.values:type_name -> kubling.v1.Value
+	14, // 10: kubling.v1.QueryBatch.columns:type_name -> kubling.v1.Column
+	15, // 11: kubling.v1.QueryBatch.rows:type_name -> kubling.v1.Row
+	10, // 12: kubling.v1.ExecuteRequest.params:type_name -> kubling.v1.Parameter
+	19, // 13: kubling.v1.ExecuteResponse.result_set_start:type_name -> kubling.v1.ResultSetStart
+	20, // 14: kubling.v1.ExecuteResponse.result_rows:type_name -> kubling.v1.ResultRows
+	23, // 15: kubling.v1.ExecuteResponse.update_result:type_name -> kubling.v1.UpdateResult
+	24, // 16: kubling.v1.ExecuteResponse.result_set_end:type_name -> kubling.v1.ResultSetEnd
+	25, // 17: kubling.v1.ExecuteResponse.execution_end:type_name -> kubling.v1.ExecutionEnd
+	14, // 18: kubling.v1.ResultSetStart.columns:type_name -> kubling.v1.Column
 	0,  // 19: kubling.v1.ResultSetStart.role:type_name -> kubling.v1.ResultSetRole
-	14, // 20: kubling.v1.ResultRows.rows:type_name -> kubling.v1.Row
-	20, // 21: kubling.v1.UpdateCount.unknown:type_name -> kubling.v1.UnknownUpdateCount
-	21, // 22: kubling.v1.UpdateResult.counts:type_name -> kubling.v1.UpdateCount
-	42, // 23: kubling.v1.ExecutionEnd.transaction:type_name -> kubling.v1.TransactionStatus
-	39, // 24: kubling.v1.BeginTransactionResponse.affinity:type_name -> kubling.v1.Affinity
-	42, // 25: kubling.v1.CommitTransactionResponse.transaction:type_name -> kubling.v1.TransactionStatus
-	42, // 26: kubling.v1.RollbackTransactionResponse.transaction:type_name -> kubling.v1.TransactionStatus
-	42, // 27: kubling.v1.IsInTransactionResponse.transaction:type_name -> kubling.v1.TransactionStatus
-	42, // 28: kubling.v1.GetTransactionStatusResponse.transaction:type_name -> kubling.v1.TransactionStatus
-	43, // 29: kubling.v1.GetServerInfoResponse.capabilities:type_name -> kubling.v1.Capabilities
-	1,  // 30: kubling.v1.SessionService.Login:input_type -> kubling.v1.LoginRequest
-	3,  // 31: kubling.v1.SessionService.Logout:input_type -> kubling.v1.LogoutRequest
-	5,  // 32: kubling.v1.SessionService.Ping:input_type -> kubling.v1.PingRequest
-	7,  // 33: kubling.v1.SessionService.PingSession:input_type -> kubling.v1.SessionPingRequest
-	10, // 34: kubling.v1.QueryService.Exec:input_type -> kubling.v1.ExecRequest
-	12, // 35: kubling.v1.QueryService.Query:input_type -> kubling.v1.QueryRequest
-	16, // 36: kubling.v1.QueryService.Execute:input_type -> kubling.v1.ExecuteRequest
-	25, // 37: kubling.v1.QueryService.BeginTransaction:input_type -> kubling.v1.BeginTransactionRequest
-	27, // 38: kubling.v1.QueryService.CommitTransaction:input_type -> kubling.v1.CommitTransactionRequest
-	29, // 39: kubling.v1.QueryService.RollbackTransaction:input_type -> kubling.v1.RollbackTransactionRequest
-	31, // 40: kubling.v1.QueryService.IsInTransaction:input_type -> kubling.v1.IsInTransactionRequest
-	33, // 41: kubling.v1.QueryService.GetTransactionStatus:input_type -> kubling.v1.GetTransactionStatusRequest
-	35, // 42: kubling.v1.QueryService.GetServerInfo:input_type -> kubling.v1.GetServerInfoRequest
-	2,  // 43: kubling.v1.SessionService.Login:output_type -> kubling.v1.LoginResponse
-	4,  // 44: kubling.v1.SessionService.Logout:output_type -> kubling.v1.LogoutResponse
-	6,  // 45: kubling.v1.SessionService.Ping:output_type -> kubling.v1.PingResponse
-	8,  // 46: kubling.v1.SessionService.PingSession:output_type -> kubling.v1.SessionPingResponse
-	11, // 47: kubling.v1.QueryService.Exec:output_type -> kubling.v1.ExecResponse
-	15, // 48: kubling.v1.QueryService.Query:output_type -> kubling.v1.QueryBatch
-	17, // 49: kubling.v1.QueryService.Execute:output_type -> kubling.v1.ExecuteResponse
-	26, // 50: kubling.v1.QueryService.BeginTransaction:output_type -> kubling.v1.BeginTransactionResponse
-	28, // 51: kubling.v1.QueryService.CommitTransaction:output_type -> kubling.v1.CommitTransactionResponse
-	30, // 52: kubling.v1.QueryService.RollbackTransaction:output_type -> kubling.v1.RollbackTransactionResponse
-	32, // 53: kubling.v1.QueryService.IsInTransaction:output_type -> kubling.v1.IsInTransactionResponse
-	34, // 54: kubling.v1.QueryService.GetTransactionStatus:output_type -> kubling.v1.GetTransactionStatusResponse
-	36, // 55: kubling.v1.QueryService.GetServerInfo:output_type -> kubling.v1.GetServerInfoResponse
-	43, // [43:56] is the sub-list for method output_type
-	30, // [30:43] is the sub-list for method input_type
-	30, // [30:30] is the sub-list for extension type_name
-	30, // [30:30] is the sub-list for extension extendee
-	0,  // [0:30] is the sub-list for field type_name
+	15, // 20: kubling.v1.ResultRows.rows:type_name -> kubling.v1.Row
+	21, // 21: kubling.v1.UpdateCount.unknown:type_name -> kubling.v1.UnknownUpdateCount
+	22, // 22: kubling.v1.UpdateResult.counts:type_name -> kubling.v1.UpdateCount
+	43, // 23: kubling.v1.ExecutionEnd.transaction:type_name -> kubling.v1.TransactionStatus
+	1,  // 24: kubling.v1.ExecutionEnd.completeness:type_name -> kubling.v1.ExecutionCompleteness
+	44, // 25: kubling.v1.ExecutionEnd.warnings:type_name -> kubling.v1.KublingWarning
+	40, // 26: kubling.v1.BeginTransactionResponse.affinity:type_name -> kubling.v1.Affinity
+	43, // 27: kubling.v1.CommitTransactionResponse.transaction:type_name -> kubling.v1.TransactionStatus
+	43, // 28: kubling.v1.RollbackTransactionResponse.transaction:type_name -> kubling.v1.TransactionStatus
+	43, // 29: kubling.v1.IsInTransactionResponse.transaction:type_name -> kubling.v1.TransactionStatus
+	43, // 30: kubling.v1.GetTransactionStatusResponse.transaction:type_name -> kubling.v1.TransactionStatus
+	45, // 31: kubling.v1.GetServerInfoResponse.capabilities:type_name -> kubling.v1.Capabilities
+	2,  // 32: kubling.v1.SessionService.Login:input_type -> kubling.v1.LoginRequest
+	4,  // 33: kubling.v1.SessionService.Logout:input_type -> kubling.v1.LogoutRequest
+	6,  // 34: kubling.v1.SessionService.Ping:input_type -> kubling.v1.PingRequest
+	8,  // 35: kubling.v1.SessionService.PingSession:input_type -> kubling.v1.SessionPingRequest
+	11, // 36: kubling.v1.QueryService.Exec:input_type -> kubling.v1.ExecRequest
+	13, // 37: kubling.v1.QueryService.Query:input_type -> kubling.v1.QueryRequest
+	17, // 38: kubling.v1.QueryService.Execute:input_type -> kubling.v1.ExecuteRequest
+	26, // 39: kubling.v1.QueryService.BeginTransaction:input_type -> kubling.v1.BeginTransactionRequest
+	28, // 40: kubling.v1.QueryService.CommitTransaction:input_type -> kubling.v1.CommitTransactionRequest
+	30, // 41: kubling.v1.QueryService.RollbackTransaction:input_type -> kubling.v1.RollbackTransactionRequest
+	32, // 42: kubling.v1.QueryService.IsInTransaction:input_type -> kubling.v1.IsInTransactionRequest
+	34, // 43: kubling.v1.QueryService.GetTransactionStatus:input_type -> kubling.v1.GetTransactionStatusRequest
+	36, // 44: kubling.v1.QueryService.GetServerInfo:input_type -> kubling.v1.GetServerInfoRequest
+	3,  // 45: kubling.v1.SessionService.Login:output_type -> kubling.v1.LoginResponse
+	5,  // 46: kubling.v1.SessionService.Logout:output_type -> kubling.v1.LogoutResponse
+	7,  // 47: kubling.v1.SessionService.Ping:output_type -> kubling.v1.PingResponse
+	9,  // 48: kubling.v1.SessionService.PingSession:output_type -> kubling.v1.SessionPingResponse
+	12, // 49: kubling.v1.QueryService.Exec:output_type -> kubling.v1.ExecResponse
+	16, // 50: kubling.v1.QueryService.Query:output_type -> kubling.v1.QueryBatch
+	18, // 51: kubling.v1.QueryService.Execute:output_type -> kubling.v1.ExecuteResponse
+	27, // 52: kubling.v1.QueryService.BeginTransaction:output_type -> kubling.v1.BeginTransactionResponse
+	29, // 53: kubling.v1.QueryService.CommitTransaction:output_type -> kubling.v1.CommitTransactionResponse
+	31, // 54: kubling.v1.QueryService.RollbackTransaction:output_type -> kubling.v1.RollbackTransactionResponse
+	33, // 55: kubling.v1.QueryService.IsInTransaction:output_type -> kubling.v1.IsInTransactionResponse
+	35, // 56: kubling.v1.QueryService.GetTransactionStatus:output_type -> kubling.v1.GetTransactionStatusResponse
+	37, // 57: kubling.v1.QueryService.GetServerInfo:output_type -> kubling.v1.GetServerInfoResponse
+	45, // [45:58] is the sub-list for method output_type
+	32, // [32:45] is the sub-list for method input_type
+	32, // [32:32] is the sub-list for extension type_name
+	32, // [32:32] is the sub-list for extension extendee
+	0,  // [0:32] is the sub-list for field type_name
 }
 
 func init() { file_kubling_v1_command_proto_init() }
@@ -2605,6 +2708,7 @@ func file_kubling_v1_command_proto_init() {
 	file_kubling_v1_capability_proto_init()
 	file_kubling_v1_transaction_proto_init()
 	file_kubling_v1_value_proto_init()
+	file_kubling_v1_warning_proto_init()
 	file_kubling_v1_command_proto_msgTypes[10].OneofWrappers = []any{}
 	file_kubling_v1_command_proto_msgTypes[16].OneofWrappers = []any{
 		(*ExecuteResponse_ResultSetStart)(nil),
@@ -2623,7 +2727,7 @@ func file_kubling_v1_command_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_kubling_v1_command_proto_rawDesc), len(file_kubling_v1_command_proto_rawDesc)),
-			NumEnums:      1,
+			NumEnums:      2,
 			NumMessages:   38,
 			NumExtensions: 0,
 			NumServices:   2,

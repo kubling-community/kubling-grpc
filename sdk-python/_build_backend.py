@@ -21,9 +21,9 @@ def _prepare():
         shutil.copyfile(ROOT / "protocol/features.json", package / "features.json")
         shutil.copytree(ROOT / "proto", package / "proto", dirs_exist_ok=True)
         shutil.copyfile(ROOT / "LICENSE", SDK / "LICENSE")
-    required = ["LICENSE", "generated/kubling/features.py"]
+    required = ["LICENSE", "generated/kubling/features.py", "generated/kubling/proto/kubling/v1/warning.proto"]
     required += [f"generated/kubling/v1/{name}_pb2.py" for name in
-                 ("command", "value", "capability", "error", "lob", "transaction")]
+                 ("command", "value", "capability", "error", "lob", "transaction", "warning")]
     required += [f"generated/kubling/v1/{name}_pb2_grpc.py" for name in ("command", "lob")]
     for relative in required:
         if not (SDK / relative).is_file():

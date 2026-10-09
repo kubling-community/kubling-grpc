@@ -31,15 +31,15 @@ def java():
     package = "com/kubling/transport/grpc/"
     with zipfile.ZipFile(binary) as archive:
         require_members(archive.namelist(), [package + name + ".class" for name in
-                        ("Features", "ExecuteRequest", "KublingError", "QueryServiceGrpc", "LobServiceGrpc")]
-                        + ["META-INF/LICENSE", "META-INF/proto/kubling/v1/command.proto", "META-INF/kubling/features.json"])
+                        ("Features", "ExecuteRequest", "ExecutionEnd", "KublingError", "KublingWarning", "WarningContext", "WarningRole", "QueryServiceGrpc", "LobServiceGrpc")]
+                        + ["META-INF/LICENSE", "META-INF/proto/kubling/v1/command.proto", "META-INF/proto/kubling/v1/warning.proto", "META-INF/kubling/features.json"])
         for name in archive.namelist():
             if name.endswith(".class") and int.from_bytes(archive.read(name)[6:8], "big") != 65:
                 raise ValueError("The Java artifact must contain Java 21 bytecode")
     with zipfile.ZipFile(binary.with_name(binary.stem + "-sources.jar")) as archive:
-        require_members(archive.namelist(), [package + "Features.java", package + "ExecuteRequest.java"])
+        require_members(archive.namelist(), [package + "Features.java", package + "ExecuteRequest.java", package + "KublingWarning.java", package + "WarningRole.java"])
     with zipfile.ZipFile(binary.with_name(binary.stem + "-javadoc.jar")) as archive:
-        require_members(archive.namelist(), ["index.html", package + "ExecuteRequest.html"])
+        require_members(archive.namelist(), ["index.html", package + "ExecuteRequest.html", package + "KublingWarning.html", package + "WarningRole.html"])
 
 
 def python():
@@ -51,9 +51,12 @@ def python():
     prefix = f"kubling_grpc-{version}"
     if not wheels[0].name.startswith(prefix + "-") or sources[0].name != prefix + ".tar.gz":
         raise ValueError(f"Python artifacts do not match VERSION {version}")
-    required = ["kubling/features.py", "kubling/features.json", "kubling/proto/kubling/v1/command.proto"]
+    required = [
+        "kubling/features.py", "kubling/features.json",
+        "kubling/proto/kubling/v1/command.proto", "kubling/proto/kubling/v1/warning.proto",
+    ]
     required += [f"kubling/v1/{name}_pb2.py" for name in
-                 ("command", "value", "capability", "transaction", "error", "lob")]
+                 ("command", "value", "capability", "transaction", "error", "lob", "warning")]
     required += [f"kubling/v1/{name}_pb2_grpc.py" for name in ("command", "lob")]
     with zipfile.ZipFile(wheels[0]) as archive:
         names = archive.namelist()

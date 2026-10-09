@@ -21,7 +21,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Independent of the server product version. This proposal is protocol 1.1.
+// Independent of the server product version. This contract is protocol 1.2.
 type ProtocolVersion struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Major         uint32                 `protobuf:"varint,1,opt,name=major,proto3" json:"major,omitempty"`
@@ -88,9 +88,15 @@ type ProtocolLimits struct {
 	MaxArrayDimensions uint32 `protobuf:"varint,6,opt,name=max_array_dimensions,json=maxArrayDimensions,proto3" json:"max_array_dimensions,omitempty"`
 	// Maximum payload bytes of a newly created LOB; positive with LOB support.
 	// Lowering this limit does not invalidate previously issued references.
-	MaxLobBytes   uint64 `protobuf:"varint,7,opt,name=max_lob_bytes,json=maxLobBytes,proto3" json:"max_lob_bytes,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	MaxLobBytes uint64 `protobuf:"varint,7,opt,name=max_lob_bytes,json=maxLobBytes,proto3" json:"max_lob_bytes,omitempty"`
+	// Maximum warning entries retained in one ExecutionEnd. Positive when
+	// partial_results_v1 is advertised; further entries are counted as omitted.
+	MaxWarningsPerExecution uint32 `protobuf:"varint,8,opt,name=max_warnings_per_execution,json=maxWarningsPerExecution,proto3" json:"max_warnings_per_execution,omitempty"`
+	// Maximum affected_resource_ids retained per KublingWarning. Positive when
+	// partial_results_v1 is advertised; further IDs are counted as omitted.
+	MaxAffectedResourceIdsPerWarning uint32 `protobuf:"varint,9,opt,name=max_affected_resource_ids_per_warning,json=maxAffectedResourceIdsPerWarning,proto3" json:"max_affected_resource_ids_per_warning,omitempty"`
+	unknownFields                    protoimpl.UnknownFields
+	sizeCache                        protoimpl.SizeCache
 }
 
 func (x *ProtocolLimits) Reset() {
@@ -168,6 +174,20 @@ func (x *ProtocolLimits) GetMaxArrayDimensions() uint32 {
 func (x *ProtocolLimits) GetMaxLobBytes() uint64 {
 	if x != nil {
 		return x.MaxLobBytes
+	}
+	return 0
+}
+
+func (x *ProtocolLimits) GetMaxWarningsPerExecution() uint32 {
+	if x != nil {
+		return x.MaxWarningsPerExecution
+	}
+	return 0
+}
+
+func (x *ProtocolLimits) GetMaxAffectedResourceIdsPerWarning() uint32 {
+	if x != nil {
+		return x.MaxAffectedResourceIdsPerWarning
 	}
 	return 0
 }
@@ -351,7 +371,7 @@ const file_kubling_v1_capability_proto_rawDesc = "" +
 	"kubling.v1\x1a\x1ckubling/v1/transaction.proto\x1a\x16kubling/v1/value.proto\"=\n" +
 	"\x0fProtocolVersion\x12\x14\n" +
 	"\x05major\x18\x01 \x01(\rR\x05major\x12\x14\n" +
-	"\x05minor\x18\x02 \x01(\rR\x05minor\"\xe2\x02\n" +
+	"\x05minor\x18\x02 \x01(\rR\x05minor\"\xf0\x03\n" +
 	"\x0eProtocolLimits\x129\n" +
 	"\x19max_request_message_bytes\x18\x01 \x01(\x04R\x16maxRequestMessageBytes\x12;\n" +
 	"\x1amax_response_message_bytes\x18\x02 \x01(\x04R\x17maxResponseMessageBytes\x12+\n" +
@@ -359,7 +379,9 @@ const file_kubling_v1_capability_proto_rawDesc = "" +
 	"\x0fmax_batch_bytes\x18\x04 \x01(\x04R\rmaxBatchBytes\x12-\n" +
 	"\x13max_lob_chunk_bytes\x18\x05 \x01(\rR\x10maxLobChunkBytes\x120\n" +
 	"\x14max_array_dimensions\x18\x06 \x01(\rR\x12maxArrayDimensions\x12\"\n" +
-	"\rmax_lob_bytes\x18\a \x01(\x04R\vmaxLobBytes\"h\n" +
+	"\rmax_lob_bytes\x18\a \x01(\x04R\vmaxLobBytes\x12;\n" +
+	"\x1amax_warnings_per_execution\x18\b \x01(\rR\x17maxWarningsPerExecution\x12O\n" +
+	"%max_affected_resource_ids_per_warning\x18\t \x01(\rR maxAffectedResourceIdsPerWarning\"h\n" +
 	"\rSupportedType\x12)\n" +
 	"\x04type\x18\x01 \x01(\x0e2\x15.kubling.v1.ValueTypeR\x04type\x12\x14\n" +
 	"\x05input\x18\x02 \x01(\bR\x05input\x12\x16\n" +

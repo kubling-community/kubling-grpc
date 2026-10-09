@@ -1,9 +1,10 @@
 # Portable semantic cases
 
 `cases.json` records independently expected outcomes for selected transaction,
-parameter, feature-activation and LOB-lease invariants. Embedded `status`,
-`parameter` and `reference` messages use ProtoJSON field/enum names; int64/uint64
-values use strings. Other keys are observation context, not new wire fields.
+parameter, feature-activation, Execute terminal-outcome and LOB-lease invariants.
+Embedded `status`, `parameter`, `execution_end` and `reference` messages use
+ProtoJSON field/enum names; int64/uint64 values use strings. Other keys are
+observation context, not new wire fields.
 
 `known_id` is the queried/affected ID available to the observer; empty means no
 ID was delivered to that observer. A NONE no-op describes session activity and
@@ -18,6 +19,12 @@ the feature preflight decision, not full SQL/authentication validation.
 structured errors when request validation fails; it does not instruct the server
 to emit execution events after rejecting a request. Unspecified advertisements
 use `default_advertised`. Dependencies are support requirements, not acceptance.
+Execution-end cases supply negotiated policy and advertised warning limits as
+observer context; those keys are not fields of ExecutionEnd. With
+`partial_results_v1` accepted, warning fixtures include an explicit `role`.
+COMPLETE permits only GENERAL warnings, while PARTIAL requires authorization and
+at least one retained PARTIAL_RESULT_CAUSE warning. The oracle never derives a
+role from stableCode, message text or list position.
 
 Run the reference checks with:
 

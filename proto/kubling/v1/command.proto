@@ -7,6 +7,7 @@ import "kubling/v1/transaction.proto";
 // Preserves transitive access to value types previously declared in this file.
 // buf:lint:ignore IMPORT_NO_PUBLIC
 import public "kubling/v1/value.proto";
+import "kubling/v1/warning.proto";
 
 option go_package = "github.com/kubling-community/kubling-grpc/sdk-go/kubling/v1;kublingv1";
 option java_multiple_files = true;
@@ -250,6 +251,10 @@ message ExecuteRequest {
   // and declared_type activate their features by presence, not by this list.
   // See protocol/features.json. Unknown/unavailable features fail before SQL.
   repeated string accepted_features = 8;
+  // Per-execution authorization for incomplete query results. False preserves
+  // strict behavior. True requires advertised and accepted partial_results_v1
+  // and is rejected before SQL otherwise.
+  bool allow_partial_results = 9;
 }
 
 // Ordered event stream; see docs/client-contract-v1.md for the state machine.
@@ -308,6 +313,12 @@ message ResultSetEnd {
   uint64 row_count = 2;
 }
 
+enum ExecutionCompleteness {
+  EXECUTION_COMPLETENESS_UNSPECIFIED = 0;
+  EXECUTION_COMPLETENESS_COMPLETE = 1;
+  EXECUTION_COMPLETENESS_PARTIAL = 2;
+}
+
 // Exactly once on success, after all results. Successful completion also
 // requires final gRPC OK; a broken stream must not be treated as success.
 // Successful autocommit reports NONE with an empty transaction ID. Cancellation
@@ -316,6 +327,16 @@ message ResultSetEnd {
 message ExecutionEnd {
   uint64 result_count = 1;
   TransactionStatus transaction = 2;
+  // Must be COMPLETE or PARTIAL when partial_results_v1 was accepted. A server
+  // omits this negotiated representation for legacy clients.
+  ExecutionCompleteness completeness = 3;
+  // Bounded terminal diagnostics. COMPLETE may have GENERAL warnings. PARTIAL
+  // requires at least one retained PARTIAL_RESULT_CAUSE warning even when
+  // further warnings are omitted.
+  repeated KublingWarning warnings = 4;
+  // Number of additional warning records omitted after bounded aggregation.
+  // This count never substitutes the cause warning required by PARTIAL.
+  uint64 omitted_warning_count = 5;
 }
 
 // ============================================================================

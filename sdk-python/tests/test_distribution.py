@@ -7,18 +7,20 @@ import unittest
 import grpc
 from google.protobuf.any_pb2 import Any
 from kubling import features
-from kubling.v1 import command_pb2, command_pb2_grpc, error_pb2, lob_pb2_grpc, value_pb2
+from kubling.v1 import command_pb2, command_pb2_grpc, error_pb2, lob_pb2_grpc, value_pb2, warning_pb2
 
 
 class DistributionTest(unittest.TestCase):
     def test_distribution_contains_all_messages_and_contract(self):
         self.assertTrue(metadata.version("kubling-grpc"))
-        for name in ("command", "value", "transaction", "capability", "error", "lob"):
+        for name in ("command", "value", "transaction", "capability", "error", "lob", "warning"):
             importlib.import_module(f"kubling.v1.{name}_pb2")
         package = resources.files("kubling")
         self.assertTrue(package.joinpath("features.json").is_file())
         self.assertTrue(package.joinpath("proto/kubling/v1/command.proto").is_file())
+        self.assertTrue(package.joinpath("proto/kubling/v1/warning.proto").is_file())
         self.assertEqual(features.GENERIC_EXECUTE_V1, "generic_execute_v1")
+        self.assertEqual(features.PARTIAL_RESULTS_V1, "partial_results_v1")
 
     def test_typed_null_and_recursive_array(self):
         parameter = command_pb2.Parameter(
@@ -42,6 +44,31 @@ class DistributionTest(unittest.TestCase):
         self.assertTrue(decoded.HasField("sql_executed"))
         self.assertFalse(decoded.sql_executed)
         self.assertFalse(error_pb2.KublingError().HasField("sql_executed"))
+
+    def test_partial_outcome_and_warning_presence(self):
+        warning = warning_pb2.KublingWarning(
+            stable_code="KBL_SOURCE_RESULT_OMITTED",
+            message="Some sources were omitted",
+            role=warning_pb2.WARNING_ROLE_PARTIAL_RESULT_CAUSE,
+            vendor_code=0,
+            occurrence_count=2,
+            affected_resource_ids=["bmc-1", "bmc-2"],
+        )
+        warning.context.result_id = 1
+        end = command_pb2.ExecutionEnd(
+            result_count=1,
+            completeness=command_pb2.EXECUTION_COMPLETENESS_PARTIAL,
+            warnings=[warning],
+            omitted_warning_count=3,
+        )
+        decoded = command_pb2.ExecutionEnd.FromString(end.SerializeToString())
+        self.assertEqual(decoded.completeness, command_pb2.EXECUTION_COMPLETENESS_PARTIAL)
+        self.assertEqual(decoded.warnings[0].role, warning_pb2.WARNING_ROLE_PARTIAL_RESULT_CAUSE)
+        self.assertTrue(decoded.warnings[0].HasField("vendor_code"))
+        self.assertEqual(decoded.warnings[0].vendor_code, 0)
+        self.assertTrue(decoded.warnings[0].context.HasField("result_id"))
+        unknown = warning_pb2.KublingWarning(role=999)
+        self.assertEqual(warning_pb2.KublingWarning.FromString(unknown.SerializeToString()).role, 999)
 
     def test_constructs_all_stubs_without_connecting(self):
         with grpc.insecure_channel("localhost:1") as channel:

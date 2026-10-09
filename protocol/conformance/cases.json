@@ -2,6 +2,7 @@
   "schema_version": 1,
   "default_advertised": [
     "generic_execute_v1",
+    "partial_results_v1",
     "typed_parameters_v1",
     "structured_errors_v1",
     "transaction_ids_v1",
@@ -718,6 +719,57 @@
       "advertised": [
         "lob_read_v1"
       ]
+    },
+    {
+      "name": "partial_flag_without_acceptance",
+      "response_feature": "partial_results_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [],
+      "fields": {
+        "kubling.v1.ExecuteRequest.allow_partial_results": true
+      },
+      "request_allowed": false,
+      "response_allowed": false
+    },
+    {
+      "name": "partial_acceptance_with_strict_policy",
+      "response_feature": "partial_results_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [
+        "partial_results_v1"
+      ],
+      "fields": {},
+      "request_allowed": true,
+      "response_allowed": true
+    },
+    {
+      "name": "partial_flag_and_acceptance",
+      "response_feature": "partial_results_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [
+        "partial_results_v1"
+      ],
+      "fields": {
+        "kubling.v1.ExecuteRequest.allow_partial_results": true
+      },
+      "request_allowed": true,
+      "response_allowed": true
+    },
+    {
+      "name": "partial_feature_not_advertised",
+      "response_feature": "partial_results_v1",
+      "rpc": "/kubling.v1.QueryService/Execute",
+      "accepted": [
+        "partial_results_v1"
+      ],
+      "fields": {
+        "kubling.v1.ExecuteRequest.allow_partial_results": true
+      },
+      "advertised": [
+        "generic_execute_v1"
+      ],
+      "request_allowed": false,
+      "response_allowed": false
     }
   ],
   "lob_leases": [
@@ -1002,6 +1054,430 @@
       "readable": false,
       "name": "node_lost",
       "node_lost": true
+    }
+  ],
+  "execution_ends": [
+    {
+      "name": "legacy_terminal_fields_absent",
+      "feature_accepted": false,
+      "allow_partial_results": false,
+      "max_warnings_per_execution": 4,
+      "max_affected_resource_ids_per_warning": 3,
+      "execution_end": {
+        "resultCount": "1"
+      },
+      "valid": true
+    },
+    {
+      "name": "unnegotiated_terminal_fields_rejected",
+      "feature_accepted": false,
+      "allow_partial_results": false,
+      "max_warnings_per_execution": 4,
+      "max_affected_resource_ids_per_warning": 3,
+      "execution_end": {
+        "resultCount": "1",
+        "completeness": "EXECUTION_COMPLETENESS_COMPLETE"
+      },
+      "valid": false
+    },
+    {
+      "name": "negotiated_unspecified_rejected",
+      "feature_accepted": true,
+      "allow_partial_results": false,
+      "max_warnings_per_execution": 4,
+      "max_affected_resource_ids_per_warning": 3,
+      "execution_end": {
+        "resultCount": "1"
+      },
+      "valid": false
+    },
+    {
+      "name": "negotiated_unknown_completeness_rejected",
+      "feature_accepted": true,
+      "allow_partial_results": false,
+      "max_warnings_per_execution": 4,
+      "max_affected_resource_ids_per_warning": 3,
+      "execution_end": {
+        "resultCount": "1",
+        "completeness": 99
+      },
+      "valid": false
+    },
+    {
+      "name": "complete_without_warnings",
+      "feature_accepted": true,
+      "allow_partial_results": false,
+      "max_warnings_per_execution": 4,
+      "max_affected_resource_ids_per_warning": 3,
+      "execution_end": {
+        "resultCount": "1",
+        "completeness": "EXECUTION_COMPLETENESS_COMPLETE"
+      },
+      "valid": true
+    },
+    {
+      "name": "complete_with_warning",
+      "feature_accepted": true,
+      "allow_partial_results": false,
+      "max_warnings_per_execution": 4,
+      "max_affected_resource_ids_per_warning": 3,
+      "execution_end": {
+        "resultCount": "1",
+        "completeness": "EXECUTION_COMPLETENESS_COMPLETE",
+        "warnings": [
+          {
+            "stableCode": "KBL_SOURCE_RETRIED",
+            "message": "A source request recovered",
+            "role": "WARNING_ROLE_GENERAL",
+            "occurrenceCount": "1"
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "negotiated_missing_warning_role_rejected",
+      "feature_accepted": true,
+      "allow_partial_results": false,
+      "max_warnings_per_execution": 4,
+      "max_affected_resource_ids_per_warning": 3,
+      "execution_end": {
+        "resultCount": "1",
+        "completeness": "EXECUTION_COMPLETENESS_COMPLETE",
+        "warnings": [
+          {
+            "stableCode": "KBL_SOURCE_RETRIED",
+            "message": "A source request recovered",
+            "occurrenceCount": "1"
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "negotiated_unknown_warning_role_rejected",
+      "feature_accepted": true,
+      "allow_partial_results": false,
+      "max_warnings_per_execution": 4,
+      "max_affected_resource_ids_per_warning": 3,
+      "execution_end": {
+        "resultCount": "1",
+        "completeness": "EXECUTION_COMPLETENESS_COMPLETE",
+        "warnings": [
+          {
+            "stableCode": "KBL_FUTURE_WARNING_V2",
+            "message": "A future warning",
+            "role": 99,
+            "occurrenceCount": "1"
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "complete_with_partial_cause_rejected",
+      "feature_accepted": true,
+      "allow_partial_results": true,
+      "max_warnings_per_execution": 4,
+      "max_affected_resource_ids_per_warning": 3,
+      "execution_end": {
+        "resultCount": "1",
+        "completeness": "EXECUTION_COMPLETENESS_COMPLETE",
+        "warnings": [
+          {
+            "stableCode": "KBL_SOURCE_RESULT_OMITTED",
+            "message": "Some sources were omitted",
+            "role": "WARNING_ROLE_PARTIAL_RESULT_CAUSE",
+            "occurrenceCount": "1"
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "authorized_partial_with_summary",
+      "feature_accepted": true,
+      "allow_partial_results": true,
+      "max_warnings_per_execution": 4,
+      "max_affected_resource_ids_per_warning": 3,
+      "execution_end": {
+        "resultCount": "1",
+        "completeness": "EXECUTION_COMPLETENESS_PARTIAL",
+        "warnings": [
+          {
+            "stableCode": "KBL_SOURCE_RESULT_OMITTED",
+            "message": "Some sources were omitted",
+            "role": "WARNING_ROLE_PARTIAL_RESULT_CAUSE",
+            "occurrenceCount": "2",
+            "affectedResourceIds": [
+              "bmc-17",
+              "bmc-42"
+            ]
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "authorized_partial_with_general_and_cause_warnings",
+      "feature_accepted": true,
+      "allow_partial_results": true,
+      "max_warnings_per_execution": 4,
+      "max_affected_resource_ids_per_warning": 3,
+      "execution_end": {
+        "resultCount": "1",
+        "completeness": "EXECUTION_COMPLETENESS_PARTIAL",
+        "warnings": [
+          {
+            "stableCode": "KBL_SOURCE_RETRIED",
+            "message": "A source request recovered",
+            "role": "WARNING_ROLE_GENERAL",
+            "occurrenceCount": "1"
+          },
+          {
+            "stableCode": "KBL_SOURCE_RESULT_OMITTED",
+            "message": "Some sources were omitted",
+            "role": "WARNING_ROLE_PARTIAL_RESULT_CAUSE",
+            "occurrenceCount": "2"
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "partial_with_only_general_warning_rejected",
+      "feature_accepted": true,
+      "allow_partial_results": true,
+      "max_warnings_per_execution": 4,
+      "max_affected_resource_ids_per_warning": 3,
+      "execution_end": {
+        "resultCount": "1",
+        "completeness": "EXECUTION_COMPLETENESS_PARTIAL",
+        "warnings": [
+          {
+            "stableCode": "KBL_SOURCE_RETRIED",
+            "message": "A source request recovered",
+            "role": "WARNING_ROLE_GENERAL",
+            "occurrenceCount": "1"
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "strict_partial_rejected",
+      "feature_accepted": true,
+      "allow_partial_results": false,
+      "max_warnings_per_execution": 4,
+      "max_affected_resource_ids_per_warning": 3,
+      "execution_end": {
+        "resultCount": "1",
+        "completeness": "EXECUTION_COMPLETENESS_PARTIAL",
+        "warnings": [
+          {
+            "stableCode": "KBL_SOURCE_RESULT_OMITTED",
+            "message": "Some sources were omitted",
+            "role": "WARNING_ROLE_PARTIAL_RESULT_CAUSE",
+            "occurrenceCount": "1"
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "partial_with_only_omitted_count_rejected",
+      "feature_accepted": true,
+      "allow_partial_results": true,
+      "max_warnings_per_execution": 4,
+      "max_affected_resource_ids_per_warning": 3,
+      "execution_end": {
+        "resultCount": "1",
+        "completeness": "EXECUTION_COMPLETENESS_PARTIAL",
+        "omittedWarningCount": "3"
+      },
+      "valid": false
+    },
+    {
+      "name": "partial_with_summary_and_truncation",
+      "feature_accepted": true,
+      "allow_partial_results": true,
+      "max_warnings_per_execution": 4,
+      "max_affected_resource_ids_per_warning": 3,
+      "execution_end": {
+        "resultCount": "1",
+        "completeness": "EXECUTION_COMPLETENESS_PARTIAL",
+        "warnings": [
+          {
+            "stableCode": "KBL_SOURCE_RESULT_OMITTED",
+            "message": "Some sources were omitted",
+            "role": "WARNING_ROLE_PARTIAL_RESULT_CAUSE",
+            "occurrenceCount": "100",
+            "affectedResourceIds": [
+              "bmc-1",
+              "bmc-2"
+            ],
+            "omittedAffectedResourceIdCount": "98"
+          }
+        ],
+        "omittedWarningCount": "2"
+      },
+      "valid": true
+    },
+    {
+      "name": "zero_warning_limit_rejected",
+      "feature_accepted": true,
+      "allow_partial_results": false,
+      "max_warnings_per_execution": 0,
+      "max_affected_resource_ids_per_warning": 3,
+      "execution_end": {
+        "resultCount": "1",
+        "completeness": "EXECUTION_COMPLETENESS_COMPLETE"
+      },
+      "valid": false
+    },
+    {
+      "name": "zero_resource_id_limit_rejected",
+      "feature_accepted": true,
+      "allow_partial_results": false,
+      "max_warnings_per_execution": 4,
+      "max_affected_resource_ids_per_warning": 0,
+      "execution_end": {
+        "resultCount": "1",
+        "completeness": "EXECUTION_COMPLETENESS_COMPLETE"
+      },
+      "valid": false
+    },
+    {
+      "name": "warning_count_exceeds_limit",
+      "feature_accepted": true,
+      "allow_partial_results": false,
+      "max_warnings_per_execution": 1,
+      "max_affected_resource_ids_per_warning": 3,
+      "execution_end": {
+        "resultCount": "1",
+        "completeness": "EXECUTION_COMPLETENESS_COMPLETE",
+        "warnings": [
+          {
+            "stableCode": "KBL_A",
+            "message": "Some sources were omitted",
+            "role": "WARNING_ROLE_GENERAL",
+            "occurrenceCount": "1"
+          },
+          {
+            "stableCode": "KBL_B",
+            "message": "Some sources were omitted",
+            "role": "WARNING_ROLE_GENERAL",
+            "occurrenceCount": "1"
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "affected_ids_exceed_limit",
+      "feature_accepted": true,
+      "allow_partial_results": true,
+      "max_warnings_per_execution": 4,
+      "max_affected_resource_ids_per_warning": 1,
+      "execution_end": {
+        "resultCount": "1",
+        "completeness": "EXECUTION_COMPLETENESS_PARTIAL",
+        "warnings": [
+          {
+            "stableCode": "KBL_SOURCE_RESULT_OMITTED",
+            "message": "Some sources were omitted",
+            "role": "WARNING_ROLE_PARTIAL_RESULT_CAUSE",
+            "occurrenceCount": "1",
+            "affectedResourceIds": [
+              "a",
+              "b"
+            ]
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "zero_occurrence_count_rejected",
+      "feature_accepted": true,
+      "allow_partial_results": false,
+      "max_warnings_per_execution": 4,
+      "max_affected_resource_ids_per_warning": 3,
+      "execution_end": {
+        "resultCount": "1",
+        "completeness": "EXECUTION_COMPLETENESS_COMPLETE",
+        "warnings": [
+          {
+            "stableCode": "KBL_SOURCE_RESULT_OMITTED",
+            "message": "Some sources were omitted",
+            "role": "WARNING_ROLE_GENERAL",
+            "occurrenceCount": "0"
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "invalid_warning_sqlstate_rejected",
+      "feature_accepted": true,
+      "allow_partial_results": false,
+      "max_warnings_per_execution": 4,
+      "max_affected_resource_ids_per_warning": 3,
+      "execution_end": {
+        "resultCount": "1",
+        "completeness": "EXECUTION_COMPLETENESS_COMPLETE",
+        "warnings": [
+          {
+            "stableCode": "KBL_SOURCE_RESULT_OMITTED",
+            "message": "Some sources were omitted",
+            "role": "WARNING_ROLE_GENERAL",
+            "occurrenceCount": "1",
+            "sqlState": "timeout"
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "explicit_vendor_zero_preserved",
+      "feature_accepted": true,
+      "allow_partial_results": false,
+      "max_warnings_per_execution": 4,
+      "max_affected_resource_ids_per_warning": 3,
+      "execution_end": {
+        "resultCount": "1",
+        "completeness": "EXECUTION_COMPLETENESS_COMPLETE",
+        "warnings": [
+          {
+            "stableCode": "KBL_SOURCE_RESULT_OMITTED",
+            "message": "Some sources were omitted",
+            "role": "WARNING_ROLE_GENERAL",
+            "occurrenceCount": "1",
+            "vendorCode": 0
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "future_stable_code_is_tolerated",
+      "feature_accepted": true,
+      "allow_partial_results": false,
+      "max_warnings_per_execution": 4,
+      "max_affected_resource_ids_per_warning": 3,
+      "execution_end": {
+        "resultCount": "1",
+        "completeness": "EXECUTION_COMPLETENESS_COMPLETE",
+        "warnings": [
+          {
+            "stableCode": "KBL_FUTURE_WARNING_V2",
+            "message": "Some sources were omitted",
+            "role": "WARNING_ROLE_GENERAL",
+            "occurrenceCount": "1"
+          }
+        ]
+      },
+      "valid": true
     }
   ]
 }
