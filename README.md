@@ -16,6 +16,7 @@ Kubling gRPC extends the platform to any language supporting Protocol Buffers an
 
 - SQL query execution
 - Streaming result sets
+- Negotiated result completeness and structured execution warnings with typed roles
 - Transactions
 - Session management
 - Strongly typed values
@@ -28,12 +29,12 @@ Kubling gRPC extends the platform to any language supporting Protocol Buffers an
 The Protocol Buffers definitions are the source of truth.
 
 ```
-proto/kubling/v1/command.proto
+proto/kubling/v1/
 ```
 
-Any language supporting Protocol Buffers can generate client stubs directly from this file.
+Any language supporting Protocol Buffers can generate client stubs from this canonical module.
 
-The additive protocol 1.1 is described in [the client contract](docs/client-contract-v1.md),
+The additive protocol 1.2 is described in [the client contract](docs/client-contract-v1.md),
 with [compatibility rules](docs/compatibility.md) and [acceptance cases](docs/acceptance.md).
 Generated definitions do not imply server support: clients must verify capabilities.
 Released schemas are available from
@@ -41,12 +42,12 @@ Released schemas are available from
 
 ## Official SDKs
 
-| Language | Status                          |
-|----------|---------------------------------|
-| Go       | ✅ Official                      |
-| Java     | Generated client; Maven packaging and release workflow |
-| Python   | Generated client; wheel/sdist packaging and release workflow |
-| Rust     | Binding generation planned      |
+| Language | Status |
+|---|---|
+| Go | Official SDK with high-level helpers |
+| Java | Official generated client published to Maven Central |
+| Python | Official generated client published to PyPI |
+| Rust | Feature constants only; SDK not published |
 
 The Go SDK is the primary maintained SDK and provides a high-level API that abstracts the underlying gRPC protocol.
 
@@ -55,11 +56,7 @@ Java and Python expose generated messages, stubs and feature constants. See the
 [build/publication guide](docs/releases.md). Package availability is established
 by a completed registry release, not by the presence of a workflow.
 
-See:
-
-```
-sdk-go/README.md
-```
+See the [Go SDK README](sdk-go/README.md).
 
 ## Code Generation
 

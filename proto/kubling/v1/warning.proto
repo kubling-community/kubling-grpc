@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package kubling.v1;
+
+option go_package = "github.com/kubling-community/kubling-grpc/sdk-go/kubling/v1;kublingv1";
+option java_multiple_files = true;
+option java_outer_classname = "WarningProto";
+option java_package = "com.kubling.transport.grpc";
+
+// Semantic role of a warning in the terminal execution outcome. Clients use
+// this field, never stable_code, message text or list position, to distinguish
+// a general diagnostic from an explanation of lost result completeness.
+enum WarningRole {
+  WARNING_ROLE_UNSPECIFIED = 0;
+  WARNING_ROLE_GENERAL = 1;
+  WARNING_ROLE_PARTIAL_RESULT_CAUSE = 2;
+}
+
+// Optional logical location for an execution warning. Every identifier must be
+// safe for the authenticated caller. Do not expose credentials, physical
+// endpoints, internal URLs or other source-private details.
+message WarningContext {
+  optional uint64 result_id = 1;
+  optional string model_id = 2;
+  optional string source_id = 3;
+}
+
+// Structured diagnostic attached to a successful Execute terminal event.
+// Completeness decisions come from ExecutionEnd.completeness and causal
+// classification comes from role. Warning order has no semantic meaning.
+message KublingWarning {
+  // Required, non-empty and stable for warnings classified by Kubling.
+  string stable_code = 1;
+  // Required human-readable diagnostic. It must be sanitized and is not stable.
+  string message = 2;
+  // When present, a five-character uppercase alphanumeric SQLSTATE.
+  optional string sql_state = 3;
+  // Presence distinguishes an absent code from an explicitly reported zero.
+  optional int32 vendor_code = 4;
+  WarningContext context = 5;
+  // Positive number of occurrences represented by this warning.
+  uint64 occurrence_count = 6;
+  // Bounded, authorized logical resource identifiers represented by this warning.
+  repeated string affected_resource_ids = 7;
+  // Additional affected resource IDs omitted from this warning.
+  uint64 omitted_affected_resource_id_count = 8;
+  // Required to be GENERAL or PARTIAL_RESULT_CAUSE when partial_results_v1 is
+  // accepted. Stable codes never substitute for this classification.
+  WarningRole role = 9;
+}

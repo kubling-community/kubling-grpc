@@ -84,6 +84,20 @@ jobs:
           git diff --exit-code -- sdk-go sdk-rust/features
           test -z "$(git ls-files --others --exclude-standard -- sdk-go/kubling sdk-go/features sdk-rust/features)"
           python3 -B -m unittest discover -s tools/tests -v
+      - name: Optionally authenticate Docker Hub pulls
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [[ -z "${DOCKERHUB_USERNAME}" || -z "${DOCKERHUB_TOKEN}" ]]; then
+            echo "::notice::Docker Hub credentials are not configured; using anonymous public pulls."
+            exit 0
+          fi
+          if ! printf '%s' "${DOCKERHUB_TOKEN}" | docker login docker.io \
+            --username "${DOCKERHUB_USERNAME}" --password-stdin; then
+            echo "::warning::Docker Hub authentication failed; continuing with anonymous public pulls."
+            docker logout docker.io >/dev/null 2>&1 || true
+          fi
       - name: Build and test
         working-directory: sdk-go
         run: |

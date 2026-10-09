@@ -96,7 +96,7 @@ func TestSemanticFixtureMessagesRoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 	cases = make(map[string][]map[string]json.RawMessage)
-	for _, group := range []string{"transactions", "parameters", "lob_leases"} {
+	for _, group := range []string{"transactions", "parameters", "lob_leases", "execution_ends"} {
 		var rows []map[string]json.RawMessage
 		if err := json.Unmarshal(document[group], &rows); err != nil {
 			t.Fatal(err)
@@ -119,6 +119,8 @@ func TestSemanticFixtureMessagesRoundTrip(t *testing.T) {
 					message, field = new(kublingv1.Parameter), "parameter"
 				case "lob_leases":
 					message, field = new(kublingv1.LobReference), "reference"
+				case "execution_ends":
+					message, field = new(kublingv1.ExecutionEnd), "execution_end"
 				}
 				if err := protojson.Unmarshal(row[field], message); err != nil {
 					t.Fatal(err)

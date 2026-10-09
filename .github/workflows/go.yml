@@ -80,6 +80,28 @@ jobs:
         working-directory: sdk-go
         run: go build ./...
 
-      - name: Test
+      - name: Test packages without Docker-backed contracts
         working-directory: sdk-go
-        run: go test -race ./...
+        run: |
+          mapfile -t packages < <(go list ./... | grep -v '/tests/contracts$')
+          go test -race "${packages[@]}"
+
+      - name: Optionally authenticate Docker Hub pulls
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [[ -z "${DOCKERHUB_USERNAME}" || -z "${DOCKERHUB_TOKEN}" ]]; then
+            echo "::notice::Docker Hub credentials are not configured; using anonymous public pulls."
+            exit 0
+          fi
+          if ! printf '%s' "${DOCKERHUB_TOKEN}" | docker login docker.io \
+            --username "${DOCKERHUB_USERNAME}" --password-stdin; then
+            echo "::warning::Docker Hub authentication failed; continuing with anonymous public pulls."
+            docker logout docker.io >/dev/null 2>&1 || true
+          fi
+
+      - name: Test Docker-backed contracts
+        working-directory: sdk-go
+        run: go test -race ./tests/contracts

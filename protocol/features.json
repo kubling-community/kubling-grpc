@@ -17,6 +17,31 @@
       }
     },
     {
+      "name": "partial_results_v1",
+      "symbol": "PartialResultsV1",
+      "requires": [
+        "generic_execute_v1"
+      ],
+      "description": "Execute terminal completeness and bounded structured warnings with typed roles; PARTIAL additionally requires per-request authorization.",
+      "activation": {
+        "request": {
+          "field": "kubling.v1.ExecuteRequest.allow_partial_results",
+          "test": "true"
+        },
+        "request_requires_acceptance": true,
+        "response": {
+          "all_of": [
+            {
+              "rpc": "/kubling.v1.QueryService/Execute"
+            },
+            {
+              "accepted_features": true
+            }
+          ]
+        }
+      }
+    },
+    {
       "name": "typed_parameters_v1",
       "symbol": "TypedParametersV1",
       "requires": [],

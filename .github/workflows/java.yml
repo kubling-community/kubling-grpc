@@ -63,7 +63,7 @@ jobs:
         run: |
           bash tools/bootstrap.sh
           tools/bin/buf lint
-          tools/bin/buf breaking --against '.git#tag=sdk-go/v0.1.1'
+          tools/bin/buf breaking --against '.git#tag=proto/v1.1.1'
           python3 -B -m unittest discover -s tools/tests -v
       - name: Generate, compile, test and package
         run: ./mvnw --batch-mode --no-transfer-progress -f sdk-java/pom.xml clean verify

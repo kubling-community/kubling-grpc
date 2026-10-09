@@ -5,6 +5,7 @@ SQL execution, authentication, resource ownership, cancellation or transactions.
 """
 
 from decimal import Decimal, InvalidOperation
+import re
 
 KNOWN_TYPES = set("STRING VARBINARY CHAR BOOLEAN BYTE SHORT INTEGER LONG BIGINTEGER FLOAT DOUBLE BIGDECIMAL DATE TIME TIMESTAMP BLOB CLOB GEOMETRY GEOGRAPHY JSON XML ARRAY".split())
 
@@ -92,6 +93,70 @@ def parameter_valid(parameter):
         return True  # Legacy inference remains the engine's existing behavior.
     descriptor = parameter["declaredType"]
     return descriptor_valid(descriptor) and value_matches(parameter.get("value"), descriptor)
+
+
+def _unsigned(value, positive=False):
+    if type(value) is int:
+        parsed = value
+    elif isinstance(value, str) and re.fullmatch(r"0|[1-9][0-9]*", value):
+        parsed = int(value)
+    else:
+        return False
+    if parsed > 2**64 - 1:
+        return False
+    return parsed > 0 if positive else parsed >= 0
+
+
+def warning_valid(warning, max_resource_ids):
+    if not isinstance(warning, dict):
+        return False
+    if not isinstance(warning.get("stableCode"), str) or not warning["stableCode"].strip():
+        return False
+    if not isinstance(warning.get("message"), str) or not warning["message"].strip():
+        return False
+    role = warning.get("role", "WARNING_ROLE_UNSPECIFIED")
+    if not isinstance(role, str):
+        return False
+    role = role.removeprefix("WARNING_ROLE_")
+    if role not in {"GENERAL", "PARTIAL_RESULT_CAUSE"}:
+        return False
+    if not _unsigned(warning.get("occurrenceCount"), positive=True):
+        return False
+    sql_state = warning.get("sqlState")
+    if sql_state is not None and (not isinstance(sql_state, str) or re.fullmatch(r"[0-9A-Z]{5}", sql_state) is None):
+        return False
+    vendor_code = warning.get("vendorCode")
+    if vendor_code is not None and (type(vendor_code) is not int or not -(2**31) <= vendor_code < 2**31):
+        return False
+    identifiers = warning.get("affectedResourceIds", [])
+    if (not isinstance(identifiers, list) or len(identifiers) > max_resource_ids
+            or any(not isinstance(identifier, str) or not identifier for identifier in identifiers)):
+        return False
+    return _unsigned(warning.get("omittedAffectedResourceIdCount", 0))
+
+
+def execution_end_valid(case):
+    end = case["execution_end"]
+    warnings = end.get("warnings", [])
+    omitted = end.get("omittedWarningCount", 0)
+    completeness = end.get("completeness", "EXECUTION_COMPLETENESS_UNSPECIFIED")
+    if not isinstance(completeness, str):
+        return False
+    completeness = completeness.removeprefix("EXECUTION_COMPLETENESS_")
+    if not case["feature_accepted"]:
+        return completeness == "UNSPECIFIED" and warnings == [] and _unsigned(omitted) and int(omitted) == 0
+    max_warnings = case["max_warnings_per_execution"]
+    max_resource_ids = case["max_affected_resource_ids_per_warning"]
+    if (completeness not in {"COMPLETE", "PARTIAL"} or type(max_warnings) is not int
+            or type(max_resource_ids) is not int or max_warnings <= 0 or max_resource_ids <= 0
+            or not isinstance(warnings, list) or len(warnings) > max_warnings or not _unsigned(omitted)):
+        return False
+    if not all(warning_valid(warning, max_resource_ids) for warning in warnings):
+        return False
+    roles = {warning["role"].removeprefix("WARNING_ROLE_") for warning in warnings}
+    if completeness == "PARTIAL":
+        return case["allow_partial_results"] and "PARTIAL_RESULT_CAUSE" in roles
+    return "PARTIAL_RESULT_CAUSE" not in roles
 
 
 def expression_matches(expression, name, context):

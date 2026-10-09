@@ -1,4 +1,4 @@
-# Kubling client contract: protocol 1.1
+# Kubling client contract: protocol 1.2
 
 These definitions specify the protocol. Clients must discover server capabilities
 before using extensions; generated bindings do not establish server support.
@@ -44,13 +44,14 @@ Without generic execution, callers may explicitly select an existing RPC only
 when they already know the expected statement result kind. Unknown kind fails
 locally without sending SQL. A SQL RPC failure, including `UNIMPLEMENTED`, never
 triggers automatic replay through a different SQL RPC. This applies even when
-no response event was received. This proposal provides no automatic SQL replay.
+no response event was received. This contract provides no automatic SQL replay.
 
 Legacy Query/Exec never return Value tags 23-26. They retain existing encodings.
 New representation input is restricted to Execute and activates by presence;
-new representation output requires explicit acceptance. Transaction IDs and declared types may also be used with
-legacy RPCs when the corresponding feature is verified on the owning session;
-old servers ignoring unknown fields is not sufficient semantic support.
+new representation output requires explicit acceptance. Transaction IDs and
+declared types may also be used with legacy RPCs when the corresponding feature
+is verified on the owning session; old servers ignoring unknown fields is not
+sufficient semantic support.
 
 ## Canonical feature activation
 
@@ -73,6 +74,7 @@ empty on RPCs that do not define it. Duplicate/unknown requested names fail.
 | Feature | Request activation | Response permission |
 |---|---|---|
 | generic_execute_v1 | Execute RPC | Execute response stream |
+| partial_results_v1 | allow_partial_results=true requires explicit acceptance | Execute terminal completeness and bounded warnings with typed roles when accepted |
 | typed_parameters_v1 | Parameter.declared_type presence | No output acceptance needed; Execute column descriptors are part of generic execution |
 | structured_errors_v1 | None | Advertised details may always accompany errors, including old RPCs |
 | transaction_ids_v1 | Nonempty transaction_id | Advertised additive response IDs |
@@ -88,8 +90,11 @@ Input arrays/spatial values/LOB references do not authorize the same output
 encoding. Conversely, output acceptance alone does not fabricate input data.
 An advertised structured error or additive transaction observation never depends
 on accepted_features. Generated-key acceptance without the request flag produces
-no keys; a true flag without acceptance fails before SQL. The legacy
-ExecRequest.returnGeneratedKeys field keeps its old behavior.
+no keys; a true flag without acceptance fails before SQL. Accepting
+`partial_results_v1` authorizes the terminal representation and GENERAL
+warnings on COMPLETE results; only `allow_partial_results=true` authorizes a
+PARTIAL success. The legacy ExecRequest.returnGeneratedKeys field keeps its old
+behavior.
 
 TransactionStatus is a shared representation: the required ExecutionEnd status
 belongs to generic_execute_v1, and an available transaction observation can be
@@ -145,17 +150,80 @@ generated_keys := ResultSetStart(GENERATED_KEYS, parent_result_id)
 - `ExecutionEnd` occurs exactly once, last; `result_count` counts all result IDs,
   including generated keys. Its transaction observation is required, with
   UNKNOWN when no authoritative observation is available.
+- With accepted `partial_results_v1`, completeness is mandatory and must be
+  COMPLETE or PARTIAL. UNSPECIFIED is a protocol error. Without acceptance, the
+  server omits completeness and warnings and retains the legacy terminal form.
+- Every retained warning has role GENERAL or PARTIAL_RESULT_CAUSE. UNSPECIFIED
+  and unknown roles are protocol errors after negotiation. COMPLETE may contain
+  GENERAL warnings but never a PARTIAL_RESULT_CAUSE warning.
+- PARTIAL is valid only when `allow_partial_results=true` and at least one compact
+  PARTIAL_RESULT_CAUSE warning is retained. GENERAL warnings may coexist.
+  `omitted_warning_count` can report additional warning records but never
+  replace every typed explanation of lost completeness.
+- PARTIAL describes incomplete query data only. Every UpdateResult, DDL result,
+  mutation and generated-key result must remain complete. A mixed execution may
+  finish PARTIAL only when each incomplete component is a query result and every
+  update outcome is authoritative; otherwise it fails non-OK without ExecutionEnd.
+- Aggregates, ordering, limits and every value derived from incomplete source
+  data remain PARTIAL. A partial result is not promised to be a representative
+  or otherwise safe subset for further calculation.
 - A successful transport close without ExecutionEnd is an incomplete protocol
   result. ExecutionEnd without final gRPC OK is not successful completion.
 - Unknown event alternatives, missing event alternatives, unexpected ordering,
   wrong IDs, or inconsistent counts fail the client stream validation. They must
   not be interpreted as null, ignored updates, or successful completion.
 
-Any non-OK status terminates the sequence, possibly after partial rows/results.
-Already delivered data does not imply successful overall execution or rollback
-of earlier effects. Cancellation/deadline expiry has the same uncertainty.
-Future output parameters or event variants need their own negotiated feature.
-The grammar prepares multiple results without advertising engine support today.
+Any non-OK status terminates the sequence, possibly after rows or complete
+results were already emitted. Already delivered data does not imply successful
+overall execution or rollback of earlier effects. Cancellation/deadline expiry
+has the same uncertainty. Future output parameters or event variants need their
+own negotiated feature. The grammar prepares multiple results without
+advertising engine support today.
+
+### Terminal completeness and warnings
+
+| Outcome | Terminal representation | Final gRPC status |
+|---|---|---|
+| COMPLETE without warnings | ExecutionEnd(COMPLETE) | OK |
+| COMPLETE with warnings | ExecutionEnd(COMPLETE, GENERAL warnings) | OK |
+| PARTIAL, feature accepted and per-request authorization true | ExecutionEnd(PARTIAL, at least one PARTIAL_RESULT_CAUSE warning, optional GENERAL warnings) | OK |
+| PARTIAL without authorization or feature acceptance | No ExecutionEnd | non-OK |
+| Error or cancellation | No ExecutionEnd | non-OK when transport permits |
+
+`partial_results_v1` depends on `generic_execute_v1`. A server advertises it only
+with positive warning limits. A client includes it in `accepted_features` when
+it understands the terminal representation. `allow_partial_results` is an
+independent per-request policy: false or absent requires complete results. An old
+client cannot accept the feature and therefore never receives a successful
+PARTIAL result. A new client does not request it from an old server.
+
+KublingWarning is successful-execution data, not a KublingError and never a gRPC
+status detail. `stable_code` and `message` are nonempty. Clients determine the
+overall outcome only from `ExecutionEnd.completeness` and distinguish a general
+diagnostic from a cause of partiality only from `KublingWarning.role`; they never
+infer either from message text, stable code, ordering or position. A stable code
+may identify a particular diagnostic for programmatic handling after its role is
+known. Message text is sanitized display text and may change or localize.
+SQLSTATE is optional and, when present, matches `[0-9A-Z]{5}`. An optional vendor
+code preserves the distinction between absent and zero. `occurrence_count` is
+positive and lets one bounded warning aggregate repeated conditions. Warning
+ordering has no semantic meaning.
+
+Context and affected resource identifiers are logical, authorized identifiers.
+They never expose credentials, SQL parameters, stack traces, physical endpoints,
+internal URLs, raw source payloads or unsanitized exceptions. Resource IDs and
+warning records are bounded independently. `omitted_affected_resource_id_count`
+counts resource IDs omitted from one warning; `omitted_warning_count` counts
+additional warning records omitted after bounded aggregation. Truncation of a
+PARTIAL outcome always retains at least one PARTIAL_RESULT_CAUSE warning. Servers
+should aggregate repeated conditions without first accumulating an unbounded list.
+
+The initial partial-result cause code is `KBL_SOURCE_RESULT_OMITTED`: one or more
+logical sources or resources could not contribute to the query result. More
+specific codes may be documented later without changing clients; unknown codes
+remain displayable diagnostics and do not alter the explicit completeness value.
+If a valid cause warning cannot fit the negotiated response-message limit, the
+execution fails non-OK without ExecutionEnd rather than silently claiming PARTIAL.
 
 ## Cancellation, deadlines and backpressure
 
@@ -170,7 +238,7 @@ independent authoritative evidence establishes it; preserve any issued ID.
 A cancelled/failed execution emits no ExecutionEnd and terminates non-OK when
 the transport permits. If completion was already emitted before cancellation
 became observable, it cannot be retracted; the client still requires final gRPC
-OK. This does not convert partial results into a successful complete result.
+OK. Cancellation never converts delivered rows into a negotiated PARTIAL success.
 
 Server buffering must have simultaneous finite row and byte bounds, including
 queued batches/chunks. A slow consumer must apply backpressure to engine fetch
@@ -231,10 +299,13 @@ strings, not implicit UTC instants. CHAR remains a single non-surrogate BMP
 Unicode scalar.
 
 Request/response limits apply to each complete uncompressed protobuf message;
-HTTP/2 framing is excluded. `max_batch_bytes` includes the complete ResultRows
-ExecuteResponse envelope, not just payload cells. A ResultRows message must meet
-both batch and response limits. Positive request batch_size is an upper bound,
-also bounded by server limits. Other events, including a large schema, must fit
+HTTP/2 framing is excluded. Servers advertising `partial_results_v1` publish
+positive `max_warnings_per_execution` and
+`max_affected_resource_ids_per_warning`; the response-message limit still bounds
+the complete serialized ExecutionEnd. `max_batch_bytes` includes the complete
+ResultRows ExecuteResponse envelope, not just payload cells. A ResultRows message
+must meet both batch and response limits. Positive request batch_size is an upper
+bound, also bounded by server limits. Other events, including a large schema, must fit
 the response limit. Unknown limits are zero, never unlimited. An oversized row
 cannot be silently split or truncated: use negotiated LOB references for its
 LOB cells, or fail explicitly. Parameters that exceed the request limit require
@@ -377,8 +448,8 @@ The protocol does not provide an operation idempotency guarantee. A future opera
 6. Reconciliation semantics for a Begin reply lost before its ID is received.
 
 The specified no-active-transaction rollback no-op does not imply idempotent
-execution or commit replay. GetTransactionStatus improves observation; it does not itself provide any
-of these execution guarantees. No operation_id field or feature is advertised
+execution or commit replay. GetTransactionStatus improves observation; it does
+not itself provide any of these execution guarantees. No operation_id field or feature is advertised
 until these obligations can be implemented and tested.
 
 ## Structured errors
@@ -408,9 +479,11 @@ raised before an Execute request's negotiation succeeds.
   True means SQL started, not that effects committed or execution completed.
   Absent means unknown/not applicable, never false. This observation alone does
   not authorize an automatic replay or a different SQL RPC.
-- Partial results are followed by non-OK status and no ExecutionEnd, not an error event plus OK.
-  Details should remain small and must not contain rows, parameters, credentials
-  or raw source exception payloads.
+- Failed, unaccepted or unauthorized partial output is followed by non-OK status
+  and no ExecutionEnd, not an error event plus OK. Only negotiated and authorized
+  query incompleteness uses ExecutionEnd(PARTIAL) plus OK. Error details remain
+  small and must not contain rows, parameters, credentials or raw source
+  exception payloads.
 
 Initial protocol stable codes (engine-specific SQL failures may have other
 documented stable codes):
@@ -426,6 +499,7 @@ documented stable codes):
 | KBL_LIMIT_EXCEEDED | RESOURCE_EXHAUSTED | Message, batch, depth or resource bound exceeded |
 | KBL_LOB_NOT_FOUND | NOT_FOUND | Owned reference is unavailable or expired |
 | KBL_LOB_INVALID | INVALID_ARGUMENT | Invalid range, offset sequence, type, size or UTF-8 |
+| KBL_PARTIAL_RESULT_NOT_ALLOWED | FAILED_PRECONDITION | Execution produced incomplete query data under strict policy; SQL has already started |
 
 The status/code alone never certifies replay safety. Some failures, such as an
 unrepresentable result or exceeded result size, can occur after execution.

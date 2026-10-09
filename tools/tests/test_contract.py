@@ -55,6 +55,11 @@ class ConformanceTests(unittest.TestCase):
             with self.subTest(name=case["name"]):
                 self.assertEqual(case["valid"], conformance.parameter_valid(case["parameter"]))
 
+    def test_execution_ends(self):
+        for case in CASES["execution_ends"]:
+            with self.subTest(name=case["name"]):
+                self.assertEqual(case["valid"], conformance.execution_end_valid(case))
+
     def test_feature_activation(self):
         features = generate_features.validate_registry(REGISTRY)
         for case in CASES["features"]:

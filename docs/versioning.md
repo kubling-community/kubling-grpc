@@ -120,6 +120,6 @@ The existing `proto/v1.1.0`, `sdk-go/v0.2.0`, `sdk-java/v0.1.0` and
 `sdk-python/v0.1.0` tags are historical pre-policy identifiers. They remain
 immutable and are not renamed or repointed.
 
-The first planned unified release train is `1.1.1`. It republishes the current
-compatible protocol and all official SDKs as `v1.1.1` from one release commit.
-After that train, no protocol or official SDK release may advance on its own.
+The first unified release train was `1.1.1`. It republished the compatible
+protocol and all official SDKs as `v1.1.1` from one release commit. Since that
+train, no protocol or official SDK release may advance on its own.

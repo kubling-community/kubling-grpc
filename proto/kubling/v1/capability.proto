@@ -10,7 +10,7 @@ option java_multiple_files = true;
 option java_outer_classname = "CapabilityProto";
 option java_package = "com.kubling.transport.grpc";
 
-// Independent of the server product version. This proposal is protocol 1.1.
+// Independent of the server product version. This contract is protocol 1.2.
 message ProtocolVersion {
   uint32 major = 1;
   uint32 minor = 2;
@@ -30,6 +30,12 @@ message ProtocolLimits {
   // Maximum payload bytes of a newly created LOB; positive with LOB support.
   // Lowering this limit does not invalidate previously issued references.
   uint64 max_lob_bytes = 7;
+  // Maximum warning entries retained in one ExecutionEnd. Positive when
+  // partial_results_v1 is advertised; further entries are counted as omitted.
+  uint32 max_warnings_per_execution = 8;
+  // Maximum affected_resource_ids retained per KublingWarning. Positive when
+  // partial_results_v1 is advertised; further IDs are counted as omitted.
+  uint32 max_affected_resource_ids_per_warning = 9;
 }
 
 // Logical type support in this session/VDB. Representation features are
